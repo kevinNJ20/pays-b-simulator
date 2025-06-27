@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur Pays B (Hinterland) - POC UEMOA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🏔️ Système Douanier Pays B (Hinterland)</h1>
+            <p>Simulation Pays de Destination - POC Interconnexion UEMOA</p>
+            <div class="status" id="status">
+                <span class="status-indicator" id="status-indicator">🔴</span>
+                <span id="status-text">Vérification...</span>
+            </div>
+        </header>
+
+        <main class="main">
+            <section class="card">
+                <h2>📊 Statistiques en Temps Réel</h2>
+                <div id="statistiques">
+                    <div class="stat-item">
+                        <span class="stat-label">Manifestes Reçus:</span>
+                        <span class="stat-value" id="stat-manifestes">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Déclarations Créées:</span>
+                        <span class="stat-value" id="stat-declarations">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Paiements Effectués:</span>
+                        <span class="stat-value" id="stat-paiements">0</span>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="chargerStatistiques()">🔄 Actualiser</button>
+            </section>
+
+            <section class="card">
+                <h2>🎮 Simulation Manuelle</h2>
+                <p>Le système traite automatiquement les manifestes reçus, mais vous pouvez tester manuellement:</p>
+                <button class="btn btn-primary" onclick="simulerReceptionManifeste()">
+                    📨 Simuler Réception Manifeste
+                </button>
+                <div id="simulation-result" class="simulation-result"></div>
+            </section>
+
+            <section class="card">
+                <h2>📨 Manifestes Reçus</h2>
+                <div id="manifestes-list">
+                    <p>En attente de manifestes...</p>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>📝 Déclarations Automatiques</h2>
+                <div id="declarations-list">
+                    <p>Aucune déclaration...</p>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>💳 Paiements Effectués</h2>
+                <div id="paiements-list">
+                    <p>Aucun paiement...</p>
+                </div>
+            </section>
+
+            <section class="card full-width">
+                <h2>🔄 Workflow Automatique</h2>
+                <div class="workflow">
+                    <div class="workflow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>📨 Réception Manifeste</h3>
+                            <p>Réception automatique depuis le Kit d'Interconnexion</p>
+                        </div>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>📝 Création Déclaration</h3>
+                            <p>Génération automatique après 2 secondes</p>
+                        </div>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>💰 Liquidation</h3>
+                            <p>Calcul des droits et taxes après 3 secondes</p>
+                        </div>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>💳 Paiement</h3>
+                            <p>Paiement automatique après 5 secondes</p>
+                        </div>
+                    </div>
+                    <div class="workflow-arrow">→</div>
+                    <div class="workflow-step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h3>📤 Notification Kit</h3>
+                            <p>Envoi automatique vers Kit d'Interconnexion</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="notification" class="notification"></div>
+    <script src="script.js"></script>
+</body>
+</html>
