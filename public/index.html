@@ -3,111 +3,581 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulateur Pays B (Hinterland) - POC UEMOA</title>
-    <link rel="stylesheet" href="style.css">
+    <title>🏔️ Pays B (Hinterland) - Kit Interconnexion UEMOA</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .kit-status-banner {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .kit-status-banner.connected {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .kit-status-banner.disconnected {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+            color: white;
+        }
+
+        .kit-status-banner.checking {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: white;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .status-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+        }
+
+        .status-indicator.connected {
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.checking {
+            background: #ffc107;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+
+        .main {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .workflow-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .workflow-step {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #f093fb;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .workflow-step.waiting {
+            border-left-color: #6c757d;
+            opacity: 0.7;
+        }
+
+        .workflow-step.active {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            transform: scale(1.05);
+        }
+
+        .workflow-step.completed {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+
+        .workflow-step.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: #f093fb;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+        }
+
+        .step-number.waiting {
+            background: #6c757d;
+        }
+
+        .step-number.active {
+            background: #ffc107;
+            animation: pulse 1.5s infinite;
+        }
+
+        .step-number.completed {
+            background: #28a745;
+        }
+
+        .step-number.error {
+            background: #dc3545;
+        }
+
+        .step-content h4 {
+            color: #2c3e50;
+            font-size: 1em;
+            margin-bottom: 5px;
+        }
+
+        .step-content p {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .step-status {
+            font-size: 0.8em;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .step-status.waiting {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+
+        .step-status.active {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .step-status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .step-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-test {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-diagnostic {
+            background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .data-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .data-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #f093fb;
+        }
+
+        .data-item.from-kit {
+            border-left-color: #667eea;
+        }
+
+        .data-item.automated {
+            border-left-color: #28a745;
+        }
+
+        .data-item.error {
+            border-left-color: #dc3545;
+        }
+
+        .item-header {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-details {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .item-status {
+            font-size: 0.8em;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .item-status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .item-status.processing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .item-status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .kit-log {
+            max-height: 350px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #f093fb;
+        }
+
+        .log-entry {
+            margin: 5px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.9em;
+            border-left: 3px solid #f093fb;
+        }
+
+        .log-entry.success {
+            border-left-color: #28a745;
+        }
+
+        .log-entry.error {
+            border-left-color: #dc3545;
+        }
+
+        .log-entry.workflow {
+            border-left-color: #ffc107;
+        }
+
+        .log-entry.kit {
+            border-left-color: #667eea;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 1000;
+            max-width: 350px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #28a745, #20c997);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #007bff, #6610f2);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .real-time-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .workflow-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <header class="header">
             <h1>🏔️ Système Douanier Pays B (Hinterland)</h1>
-            <p>Simulation Pays de Destination - POC Interconnexion UEMOA</p>
-            <div class="status" id="status">
-                <span class="status-indicator" id="status-indicator">🔴</span>
-                <span id="status-text">Vérification...</span>
-            </div>
+            <p>🇧🇫 Burkina Faso - Traitement Automatique + Kit MuleSoft</p>
         </header>
 
+        <!-- Bannière statut Kit -->
+        <div class="kit-status-banner checking" id="kit-banner">
+            <div class="loading"></div> Vérification connexion Kit d'Interconnexion...
+        </div>
+
+        <!-- Grille de statut -->
+        <div class="status-grid">
+            <div class="status-card">
+                <h3>🏛️ Service Local</h3>
+                <div class="connection-status">
+                    <div class="status-indicator connected"></div>
+                    <span>Douanes BFA Actives</span>
+                </div>
+                <small>Burkina Faso - Traitement automatique</small>
+            </div>
+            
+            <div class="status-card">
+                <h3>🔗 Kit d'Interconnexion</h3>
+                <div class="connection-status">
+                    <div class="status-indicator checking" id="kit-indicator"></div>
+                    <span id="kit-status-text">Vérification...</span>
+                </div>
+                <small id="kit-details">Test de connectivité en cours</small>
+            </div>
+            
+            <div class="status-card">
+                <h3>📊 Activité Automatique</h3>
+                <div>Manifestes reçus: <strong id="stat-manifestes">0</strong></div>
+                <div>Workflows actifs: <strong id="stat-workflows">0</strong></div>
+                <div>Paiements envoyés: <strong id="stat-paiements">0</strong></div>
+            </div>
+            
+            <div class="status-card">
+                <h3>🤖 Performance Workflow</h3>
+                <div>Taux automatisation: <strong id="taux-automatisation">100%</strong></div>
+                <div>Temps moyen: <strong id="temps-moyen">-- s</strong></div>
+            </div>
+        </div>
+
         <main class="main">
-            <section class="card">
-                <h2>📊 Statistiques en Temps Réel</h2>
-                <div id="statistiques">
-                    <div class="stat-item">
-                        <span class="stat-label">Manifestes Reçus:</span>
-                        <span class="stat-value" id="stat-manifestes">0</span>
+            <!-- Workflow automatique en temps réel -->
+            <section class="card full-width">
+                <h2>🤖 Workflow Automatique en Temps Réel <span class="real-time-indicator"></span></h2>
+                <p>Le système traite automatiquement les manifestes reçus du Kit d'Interconnexion :</p>
+                
+                <div class="workflow-container">
+                    <div class="workflow-step waiting" id="step-1">
+                        <div class="step-number waiting">1</div>
+                        <div class="step-content">
+                            <h4>📨 Réception</h4>
+                            <p>Manifeste depuis Kit</p>
+                            <div class="step-status waiting" id="step-1-status">En attente...</div>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Déclarations Créées:</span>
-                        <span class="stat-value" id="stat-declarations">0</span>
+                    
+                    <div class="workflow-step waiting" id="step-2">
+                        <div class="step-number waiting">2</div>
+                        <div class="step-content">
+                            <h4>📝 Déclaration</h4>
+                            <p>Création auto (2s)</p>
+                            <div class="step-status waiting" id="step-2-status">En attente...</div>
+                        </div>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">Paiements Effectués:</span>
-                        <span class="stat-value" id="stat-paiements">0</span>
+                    
+                    <div class="workflow-step waiting" id="step-3">
+                        <div class="step-number waiting">3</div>
+                        <div class="step-content">
+                            <h4>💰 Liquidation</h4>
+                            <p>Calcul droits (3s)</p>
+                            <div class="step-status waiting" id="step-3-status">En attente...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-step waiting" id="step-4">
+                        <div class="step-number waiting">4</div>
+                        <div class="step-content">
+                            <h4>💳 Paiement</h4>
+                            <p>Acquittement (5s)</p>
+                            <div class="step-status waiting" id="step-4-status">En attente...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-step waiting" id="step-5">
+                        <div class="step-number waiting">5</div>
+                        <div class="step-content">
+                            <h4>📤 Notification Kit</h4>
+                            <p>Vers Kit MuleSoft</p>
+                            <div class="step-status waiting" id="step-5-status">En attente...</div>
+                        </div>
                     </div>
                 </div>
-                <button class="btn btn-secondary" onclick="chargerStatistiques()">🔄 Actualiser</button>
-            </section>
 
-            <section class="card">
-                <h2>🎮 Simulation Manuelle</h2>
-                <p>Le système traite automatiquement les manifestes reçus, mais vous pouvez tester manuellement:</p>
-                <button class="btn btn-primary" onclick="simulerReceptionManifeste()">
-                    📨 Simuler Réception Manifeste
-                </button>
-                <div id="simulation-result" class="simulation-result"></div>
-            </section>
-
-            <section class="card">
-                <h2>📨 Manifestes Reçus</h2>
-                <div id="manifestes-list">
-                    <p>En attente de manifestes...</p>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-test" onclick="simulerWorkflowComplet()" id="btn-simuler">
+                        🧪 Simuler Workflow Complet
+                    </button>
+                    <button class="btn btn-diagnostic" onclick="testerConnexionKit()">
+                        🔧 Tester Kit
+                    </button>
                 </div>
             </section>
 
+            <!-- Manifestes reçus -->
             <section class="card">
-                <h2>📝 Déclarations Automatiques</h2>
-                <div id="declarations-list">
-                    <p>Aucune déclaration...</p>
+                <h2>📨 Manifestes Reçus du Kit</h2>
+                <div class="data-list" id="manifestes-list">
+                    <p>En attente de manifestes du Kit...</p>
                 </div>
             </section>
 
+            <!-- Paiements automatiques -->
             <section class="card">
-                <h2>💳 Paiements Effectués</h2>
-                <div id="paiements-list">
+                <h2>💳 Paiements Automatiques</h2>
+                <div class="data-list" id="paiements-list">
                     <p>Aucun paiement...</p>
                 </div>
             </section>
 
+            <!-- Log des interactions Kit -->
             <section class="card full-width">
-                <h2>🔄 Workflow Automatique</h2>
-                <div class="workflow">
-                    <div class="workflow-step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <h3>📨 Réception Manifeste</h3>
-                            <p>Réception automatique depuis le Kit d'Interconnexion</p>
-                        </div>
-                    </div>
-                    <div class="workflow-arrow">→</div>
-                    <div class="workflow-step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <h3>📝 Création Déclaration</h3>
-                            <p>Génération automatique après 2 secondes</p>
-                        </div>
-                    </div>
-                    <div class="workflow-arrow">→</div>
-                    <div class="workflow-step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <h3>💰 Liquidation</h3>
-                            <p>Calcul des droits et taxes après 3 secondes</p>
-                        </div>
-                    </div>
-                    <div class="workflow-arrow">→</div>
-                    <div class="workflow-step">
-                        <div class="step-number">4</div>
-                        <div class="step-content">
-                            <h3>💳 Paiement</h3>
-                            <p>Paiement automatique après 5 secondes</p>
-                        </div>
-                    </div>
-                    <div class="workflow-arrow">→</div>
-                    <div class="workflow-step">
-                        <div class="step-number">5</div>
-                        <div class="step-content">
-                            <h3>📤 Notification Kit</h3>
-                            <p>Envoi automatique vers Kit d'Interconnexion</p>
-                        </div>
+                <h2>🔗 Journal des Interactions Kit <span class="real-time-indicator"></span></h2>
+                <div class="kit-log" id="kit-log">
+                    <div class="log-entry workflow">
+                        <strong>Système initialisé</strong> - Monitoring des échanges avec Kit d'Interconnexion activé
+                        <span style="float: right; color: #6c757d; font-size: 0.8em;" id="init-time"></span>
                     </div>
                 </div>
             </section>
@@ -115,6 +585,362 @@
     </div>
 
     <div id="notification" class="notification"></div>
-    <script src="script.js"></script>
+
+    <script>
+        // Configuration
+        const API_BASE = window.location.origin + '/api';
+        const KIT_URL = 'https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io';
+        
+        let statusInterval;
+        let refreshInterval;
+        let kitConnected = false;
+        let workflowActive = false;
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initialisation Pays B - Workflow Automatique + Kit MuleSoft');
+            
+            document.getElementById('init-time').textContent = new Date().toLocaleTimeString();
+            
+            // Vérifications périodiques
+            verifierStatutKit();
+            statusInterval = setInterval(verifierStatutKit, 15000);
+            
+            // Actualisation données
+            chargerDonnees();
+            refreshInterval = setInterval(chargerDonnees, 8000);
+            
+            ajouterLogEntry('workflow', 'Service démarré', 'Pays B opérationnel - Workflow automatique activé');
+        });
+
+        // Vérification du statut Kit
+        async function verifierStatutKit() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                const kitInfo = data.kit;
+                const banner = document.getElementById('kit-banner');
+                const indicator = document.getElementById('kit-indicator');
+                const statusText = document.getElementById('kit-status-text');
+                const details = document.getElementById('kit-details');
+                
+                if (kitInfo.accessible) {
+                    // Kit connecté
+                    banner.className = 'kit-status-banner connected';
+                    banner.innerHTML = `✅ Kit d'Interconnexion opérationnel - ${kitInfo.status} (${kitInfo.latence}ms)`;
+                    
+                    indicator.className = 'status-indicator connected';
+                    statusText.textContent = 'Kit Opérationnel';
+                    details.textContent = `Latence: ${kitInfo.latence}ms`;
+                    
+                    kitConnected = true;
+                } else {
+                    // Kit déconnecté
+                    banner.className = 'kit-status-banner disconnected';
+                    banner.innerHTML = `❌ Kit d'Interconnexion inaccessible - Mode autonome`;
+                    
+                    indicator.className = 'status-indicator';
+                    statusText.textContent = 'Kit Inaccessible';
+                    details.textContent = 'Workflow continue en mode autonome';
+                    
+                    kitConnected = false;
+                }
+                
+            } catch (error) {
+                console.error('Erreur vérification Kit:', error);
+                kitConnected = false;
+            }
+        }
+
+        // Test de connexion Kit
+        async function testerConnexionKit() {
+            ajouterLogEntry('kit', 'Test connexion Kit', 'Test de connectivité démarré...');
+            
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                
+                if (data.kit.accessible) {
+                    afficherNotification(`✅ Kit accessible - Latence: ${data.kit.latence}ms`, 'success');
+                    ajouterLogEntry('kit', 'Test Kit', `✅ Succès - Latence: ${data.kit.latence}ms`);
+                } else {
+                    throw new Error('Kit inaccessible');
+                }
+                
+            } catch (error) {
+                afficherNotification('❌ Kit inaccessible: ' + error.message, 'error');
+                ajouterLogEntry('kit', 'Test Kit', `❌ Échec: ${error.message}`);
+            }
+        }
+
+        // Simulation workflow complet
+        async function simulerWorkflowComplet() {
+            if (workflowActive) {
+                afficherNotification('⏳ Workflow déjà en cours...', 'info');
+                return;
+            }
+            
+            workflowActive = true;
+            resetWorkflow();
+            
+            const btnSimuler = document.getElementById('btn-simuler');
+            btnSimuler.disabled = true;
+            btnSimuler.innerHTML = '<div class="loading"></div> Simulation en cours...';
+            
+            afficherNotification('🚀 Démarrage simulation workflow', 'info');
+            ajouterLogEntry('workflow', 'Simulation workflow', 'Démarrage du processus complet automatique');
+            
+            try {
+                // Étape 1: Simuler réception manifeste depuis Kit
+                activerEtape(1, 'Réception manifeste...');
+                ajouterLogEntry('kit', 'Réception manifeste', 'Simulation manifeste depuis Kit MuleSoft');
+                
+                await attendre(1000);
+                completerEtape(1, 'Manifeste reçu');
+                
+                // Étape 2: Déclaration automatique (2s)
+                activerEtape(2, 'Création déclaration...');
+                ajouterLogEntry('workflow', 'Création déclaration', 'Génération automatique déclaration douanière');
+                
+                await attendre(2000);
+                completerEtape(2, 'Déclaration créée');
+                
+                // Étape 3: Liquidation (3s)
+                activerEtape(3, 'Calcul droits...');
+                ajouterLogEntry('workflow', 'Liquidation', 'Calcul automatique droits et taxes');
+                
+                await attendre(3000);
+                const montant = Math.floor(Math.random() * 500000) + 100000;
+                completerEtape(3, `Liquidé: ${montant.toLocaleString()} FCFA`);
+                
+                // Étape 4: Paiement automatique (5s)
+                activerEtape(4, 'Paiement en cours...');
+                ajouterLogEntry('workflow', 'Paiement automatique', `Acquittement ${montant.toLocaleString()} FCFA`);
+                
+                await attendre(5000);
+                completerEtape(4, 'Paiement effectué');
+                
+                // Étape 5: Notification Kit
+                activerEtape(5, 'Notification Kit...');
+                ajouterLogEntry('kit', 'Notification paiement', 'Envoi notification vers Kit MuleSoft');
+                
+                if (kitConnected) {
+                    await attendre(1000);
+                    completerEtape(5, 'Notifié au Kit');
+                    ajouterLogEntry('kit', 'Notification Kit', '✅ Paiement notifié avec succès');
+                    afficherNotification('✅ Workflow complet terminé avec succès!', 'success');
+                } else {
+                    await attendre(1000);
+                    marquerEtapeErreur(5, 'Kit inaccessible');
+                    ajouterLogEntry('kit', 'Notification Kit', '❌ Échec - Kit inaccessible');
+                    afficherNotification('⚠️ Workflow terminé - Kit inaccessible', 'error');
+                }
+                
+            } catch (error) {
+                afficherNotification('❌ Erreur workflow: ' + error.message, 'error');
+                ajouterLogEntry('error', 'Workflow', `❌ Erreur: ${error.message}`);
+            } finally {
+                workflowActive = false;
+                btnSimuler.disabled = false;
+                btnSimuler.innerHTML = '🧪 Simuler Workflow Complet';
+            }
+        }
+
+        // Gestion des étapes workflow
+        function activerEtape(numero, texte) {
+            const etape = document.getElementById(`step-${numero}`);
+            const stepNumber = etape.querySelector('.step-number');
+            const status = document.getElementById(`step-${numero}-status`);
+            
+            etape.className = 'workflow-step active';
+            stepNumber.className = 'step-number active';
+            status.className = 'step-status active';
+            status.textContent = texte;
+        }
+
+        function completerEtape(numero, texte) {
+            const etape = document.getElementById(`step-${numero}`);
+            const stepNumber = etape.querySelector('.step-number');
+            const status = document.getElementById(`step-${numero}-status`);
+            
+            etape.className = 'workflow-step completed';
+            stepNumber.className = 'step-number completed';
+            status.className = 'step-status completed';
+            status.textContent = texte;
+        }
+
+        function marquerEtapeErreur(numero, texte) {
+            const etape = document.getElementById(`step-${numero}`);
+            const stepNumber = etape.querySelector('.step-number');
+            const status = document.getElementById(`step-${numero}-status`);
+            
+            etape.className = 'workflow-step error';
+            stepNumber.className = 'step-number error';
+            status.className = 'step-status error';
+            status.textContent = texte;
+        }
+
+        function resetWorkflow() {
+            for (let i = 1; i <= 5; i++) {
+                const etape = document.getElementById(`step-${i}`);
+                const stepNumber = etape.querySelector('.step-number');
+                const status = document.getElementById(`step-${i}-status`);
+                
+                etape.className = 'workflow-step waiting';
+                stepNumber.className = 'step-number waiting';
+                status.className = 'step-status waiting';
+                status.textContent = 'En attente...';
+            }
+        }
+
+        // Charger données
+        async function chargerDonnees() {
+            await Promise.all([
+                chargerStatistiques(),
+                chargerManifestes(),
+                chargerPaiements()
+            ]);
+        }
+
+        // Charger statistiques
+        async function chargerStatistiques() {
+            try {
+                const response = await fetch(`${API_BASE}/statistiques`);
+                const data = await response.json();
+                
+                if (data.status === 'SUCCESS') {
+                    const stats = data.statistiques;
+                    
+                    document.getElementById('stat-manifestes').textContent = stats.manifestesRecus;
+                    document.getElementById('stat-workflows').textContent = data.workflow?.actifs || 0;
+                    document.getElementById('stat-paiements').textContent = stats.paiementsEffectues;
+                    document.getElementById('taux-automatisation').textContent = stats.tauxAutomatisation + '%';
+                    document.getElementById('temps-moyen').textContent = 
+                        stats.performance?.tempsTraitementMoyen > 0 ? stats.performance.tempsTraitementMoyen + ' s' : '-- s';
+                }
+                
+            } catch (error) {
+                console.error('Erreur chargement statistiques:', error);
+            }
+        }
+
+        // Charger manifestes
+        async function chargerManifestes() {
+            try {
+                const response = await fetch(`${API_BASE}/manifeste/lister?limite=5`);
+                const data = await response.json();
+                
+                const container = document.getElementById('manifestes-list');
+                
+                if (data.status === 'SUCCESS' && data.manifestes.length > 0) {
+                    container.innerHTML = data.manifestes.map(manifeste => {
+                        const statusClass = manifeste.workflow?.statut === 'COMPLETE' ? 'success' : 
+                                           manifeste.workflow?.statut === 'EN_COURS' ? 'processing' : '';
+                        
+                        return `
+                            <div class="data-item from-kit">
+                                <div class="item-header">
+                                    📨 ${manifeste.numeroOrigine} - ${manifeste.transporteur}
+                                    <span class="item-status ${statusClass}">
+                                        ${manifeste.workflow?.statut || 'RECU'}
+                                    </span>
+                                </div>
+                                <div class="item-details">
+                                    📍 Depuis: ${manifeste.origine?.pays || 'Kit'}<br>
+                                    📦 ${manifeste.marchandises.nombre} marchandise(s)<br>
+                                    🔄 Étape: ${manifeste.workflow?.etapeActuelle || 'RECEPTION'}<br>
+                                    📅 ${new Date(manifeste.dateReception).toLocaleString('fr-FR')}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = '<p>En attente de manifestes du Kit...</p>';
+                }
+                
+            } catch (error) {
+                console.error('Erreur chargement manifestes:', error);
+                document.getElementById('manifestes-list').innerHTML = '<p>Erreur de chargement</p>';
+            }
+        }
+
+        // Charger paiements (simulation)
+        async function chargerPaiements() {
+            // Pour la démo, on simule quelques paiements
+            const container = document.getElementById('paiements-list');
+            const nombrePaiements = parseInt(document.getElementById('stat-paiements').textContent) || 0;
+            
+            if (nombrePaiements > 0) {
+                const paiements = [];
+                for (let i = 0; i < Math.min(nombrePaiements, 3); i++) {
+                    paiements.push({
+                        id: `PAY${Date.now() - i * 1000}`,
+                        montant: Math.floor(Math.random() * 500000) + 100000,
+                        date: new Date(Date.now() - i * 3600000)
+                    });
+                }
+                
+                container.innerHTML = paiements.map(paiement => `
+                    <div class="data-item automated">
+                        <div class="item-header">
+                            💳 ${paiement.id}
+                            <span class="item-status success">CONFIRME</span>
+                        </div>
+                        <div class="item-details">
+                            💰 Montant: ${paiement.montant.toLocaleString()} FCFA<br>
+                            🏦 Mode: Virement automatique<br>
+                            📅 ${paiement.date.toLocaleString('fr-FR')}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p>Aucun paiement effectué</p>';
+            }
+        }
+
+        // Ajouter entrée dans le log
+        function ajouterLogEntry(type, action, details) {
+            const container = document.getElementById('kit-log');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `
+                <strong>${action}</strong> - ${details}
+                <span style="float: right; color: #6c757d; font-size: 0.8em;">${timestamp}</span>
+            `;
+            
+            container.prepend(entry);
+            
+            // Garder seulement les 20 dernières entrées
+            const entries = container.querySelectorAll('.log-entry');
+            if (entries.length > 20) {
+                entries[entries.length - 1].remove();
+            }
+        }
+
+        // Utilitaires
+        function attendre(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function afficherNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        // Cleanup
+        window.addEventListener('beforeunload', () => {
+            if (statusInterval) clearInterval(statusInterval);
+            if (refreshInterval) clearInterval(refreshInterval);
+        });
+    </script>
 </body>
 </html>
