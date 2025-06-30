@@ -13,20 +13,20 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'POST') {
-      console.log('📨 [Pays B] Réception manifeste depuis Kit:', {
+      console.log('📨 [Pays B] Réception manifeste depuis Kit MuleSoft:', {
         source: req.headers['x-source-system'],
         pays: req.headers['x-source-country'],
         correlationId: req.headers['x-correlation-id'],
         manifeste: req.body?.manifeste?.numeroOrigine
       });
       
-      // Validation des données reçues
-      const erreurs = validerManifesteRecu(req.body);
+      // ✅ CORRECTION: Validation adaptée aux données du Kit MuleSoft
+      const erreurs = validerManifesteDepuisKit(req.body);
       if (erreurs.length > 0) {
-        console.log('❌ [Pays B] Manifeste invalide:', erreurs);
+        console.log('❌ [Pays B] Manifeste Kit MuleSoft invalide:', erreurs);
         return res.status(400).json({
           status: 'ERROR',
-          message: 'Données manifeste invalides',
+          message: 'Données manifeste du Kit MuleSoft invalides',
           erreurs,
           timestamp: new Date().toISOString()
         });
@@ -42,13 +42,13 @@ module.exports = async (req, res) => {
         }
       });
 
-      console.log(`✅ [Pays B] Manifeste reçu et workflow démarré: ${manifesteRecu.id}`);
+      console.log(`✅ [Pays B] Manifeste reçu depuis Kit MuleSoft et workflow démarré: ${manifesteRecu.id}`);
       console.log(`🔄 [Pays B] Traitement automatique en cours...`);
 
-      // Réponse immédiate de confirmation
+      // ✅ CORRECTION: Réponse adaptée pour MuleSoft
       const reponse = {
         status: 'RECEIVED',
-        message: 'Manifeste reçu, traitement automatique démarré',
+        message: 'Manifeste reçu du Kit MuleSoft, traitement automatique démarré',
         
         manifeste: {
           id: manifesteRecu.id,
@@ -81,6 +81,13 @@ module.exports = async (req, res) => {
           etapeActuelle: 'DECLARATION'
         },
         
+        // ✅ NOUVEAU: Informations pour MuleSoft
+        kit: {
+          acknowledgment: 'SUCCESS',
+          processedBy: 'PAYS_B_DOUANES',
+          estimatedCompletion: new Date(Date.now() + 15000).toISOString()
+        },
+        
         timestamp: new Date().toISOString(),
         correlationId: req.headers['x-correlation-id']
       };
@@ -88,7 +95,7 @@ module.exports = async (req, res) => {
       res.status(200).json(reponse);
       
       // Log pour monitoring
-      console.log(`📊 [Pays B] Workflow automatique initié pour manifeste ${manifesteRecu.manifeste?.numeroOrigine}`);
+      console.log(`📊 [Pays B] Workflow automatique initié pour manifeste Kit MuleSoft ${manifesteRecu.manifeste?.numeroOrigine}`);
       
     } else if (req.method === 'GET') {
       // Lister les manifestes reçus (pour le dashboard)
@@ -129,7 +136,7 @@ module.exports = async (req, res) => {
     
     res.status(500).json({
       status: 'ERROR',
-      message: 'Erreur lors du traitement du manifeste',
+      message: 'Erreur lors du traitement du manifeste Kit MuleSoft',
       erreur: error.message,
       timestamp: new Date().toISOString(),
       correlationId: req.headers['x-correlation-id']
@@ -137,13 +144,13 @@ module.exports = async (req, res) => {
   }
 };
 
-// Validation des données de manifeste reçues du Kit
-function validerManifesteRecu(donnees) {
+// ✅ CORRECTION: Validation adaptée aux données du Kit MuleSoft
+function validerManifesteDepuisKit(donnees) {
   const erreurs = [];
 
   // Vérification structure générale
   if (!donnees || typeof donnees !== 'object') {
-    erreurs.push('Données manifeste manquantes ou invalides');
+    erreurs.push('Données manifeste Kit MuleSoft manquantes ou invalides');
     return erreurs;
   }
 

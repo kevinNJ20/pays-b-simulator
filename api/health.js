@@ -14,18 +14,24 @@ module.exports = async (req, res) => {
 
   if (req.method === 'GET') {
     try {
-      // Vérifier la connectivité avec le Kit (mais sans bloquer la réponse)
+      // ✅ CORRECTION: Vérifier la connectivité Kit MuleSoft DIRECTE (sans bloquer)
       let kitStatus = null;
       try {
+        console.log('🔍 [Pays B] Test connectivité DIRECTE vers Kit MuleSoft...');
         kitStatus = await Promise.race([
-          kitClient.verifierSante(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+          kitClient.verifierSante(), // ✅ Va maintenant directement vers MuleSoft
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout Kit MuleSoft > 5s')), 5000)
+          )
         ]);
+        console.log('✅ [Pays B] Kit MuleSoft accessible:', kitStatus.accessible);
       } catch (error) {
+        console.error('❌ [Pays B] Kit MuleSoft inaccessible:', error.message);
         kitStatus = {
           accessible: false,
           erreur: error.message,
-          status: 'TIMEOUT'
+          status: 'TIMEOUT_OU_INACCESSIBLE',
+          source: 'DIRECT_MULESOFT_TEST'
         };
       }
 
@@ -61,12 +67,15 @@ module.exports = async (req, res) => {
           derniereActivite: stats.derniereMiseAJour
         },
         
+        // ✅ CORRECTION: Informations Kit MuleSoft directes
         kit: {
-          url: kitClient.baseURL,
+          url: kitClient.baseURL, // URL MuleSoft directe
           status: kitStatus?.status || 'UNKNOWN',
           accessible: kitStatus?.accessible || false,
           latence: kitStatus?.latence || null,
-          dernierTest: kitStatus?.timestamp || new Date().toISOString()
+          dernierTest: kitStatus?.timestamp || new Date().toISOString(),
+          modeConnexion: 'DIRECT_MULESOFT', // ✅ Indique connexion directe
+          source: kitStatus?.source || 'DIRECT_MULESOFT_TEST'
         },
         
         endpoints: {
@@ -87,7 +96,7 @@ module.exports = async (req, res) => {
         }
       };
 
-      // Status global du service (DEGRADED si Kit inaccessible mais workflow peut continuer)
+      // ✅ Status global (DEGRADED si Kit inaccessible mais workflow peut continuer)
       const globalStatus = kitStatus?.accessible ? 'UP' : 'DEGRADED';
       
       res.status(200).json({
@@ -96,7 +105,7 @@ module.exports = async (req, res) => {
       });
       
     } catch (error) {
-      console.error('Erreur health check:', error);
+      console.error('❌ [Pays B] Erreur health check:', error);
       
       res.status(500).json({
         service: 'Système Douanier Pays B (Hinterland)',

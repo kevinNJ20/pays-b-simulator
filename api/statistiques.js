@@ -21,15 +21,25 @@ module.exports = async (req, res) => {
       const interactions = database.obtenirInteractionsKit(10);
       const workflowsActifs = database.obtenirWorkflowsActifs();
       
-      // Test rapide de connectivité Kit (sans bloquer)
+      // ✅ CORRECTION: Test Kit direct vers MuleSoft (sans bloquer)
       let kitInfo = null;
       try {
+        console.log('🔍 [Pays B] Test Kit MuleSoft direct...');
         kitInfo = await Promise.race([
-          kitClient.verifierSante(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+          kitClient.verifierSante(), // ✅ Va maintenant directement vers MuleSoft
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout Kit MuleSoft > 5s')), 5000)
+          )
         ]);
+        console.log('✅ [Pays B] Kit MuleSoft status:', kitInfo.status);
       } catch (error) {
-        kitInfo = { accessible: false, erreur: 'Timeout ou inaccessible' };
+        console.error('❌ [Pays B] Kit MuleSoft inaccessible:', error.message);
+        kitInfo = { 
+          accessible: false, 
+          erreur: error.message,
+          status: 'TIMEOUT_OU_INACCESSIBLE',
+          source: 'DIRECT_MULESOFT_TEST'
+        };
       }
 
       // Calculer des métriques avancées
@@ -58,13 +68,15 @@ module.exports = async (req, res) => {
           tauxSucces: metriques.tauxSuccesWorkflow
         },
         
-        // Informations Kit
+        // ✅ CORRECTION: Informations Kit MuleSoft directes
         kit: {
           status: kitInfo?.status || 'UNKNOWN',
           accessible: kitInfo?.accessible || false,
-          url: kitClient.baseURL,
+          url: kitClient.baseURL, // URL MuleSoft directe
           latence: kitInfo?.latence || null,
-          dernierTest: kitInfo?.timestamp || new Date().toISOString()
+          dernierTest: kitInfo?.timestamp || new Date().toISOString(),
+          modeConnexion: 'DIRECT_MULESOFT', // ✅ Indique connexion directe
+          source: kitInfo?.source || 'DIRECT_MULESOFT_TEST'
         },
         
         // Interactions récentes avec le Kit
@@ -88,12 +100,14 @@ module.exports = async (req, res) => {
         // Données pour graphiques
         tendances: metriques.tendances,
         
-        // Santé du système
+        // ✅ CORRECTION: Santé du système avec info Kit directe
         systemeSante: {
           servicePrincipal: 'UP',
           baseDonnees: 'UP',
           workflowEngine: workflowsActifs.some(w => w.statut === 'EN_COURS') ? 'ACTIVE' : 'IDLE',
           kitInterconnexion: kitInfo?.accessible ? 'UP' : 'DOWN',
+          modeIntegration: 'DIRECT_MULESOFT', // ✅ Nouveau champ
+          urlKit: kitClient.baseURL, // ✅ URL directe MuleSoft
           derniereMiseAJour: stats.derniereMiseAJour
         }
       };
@@ -118,7 +132,7 @@ module.exports = async (req, res) => {
   }
 };
 
-// Fonction pour calculer des métriques avancées
+// Fonction pour calculer des métriques avancées (inchangée)
 function calculerMetriquesAvancees(stats, interactions, workflowsActifs) {
   // Workflows par étape
   const workflowsParEtape = workflowsActifs.reduce((acc, workflow) => {
@@ -132,7 +146,7 @@ function calculerMetriquesAvancees(stats, interactions, workflowsActifs) {
   
   if (workflowsCompletes.length > 0) {
     workflowsCompletes.forEach(workflow => {
-      workflow.etapes.forEach(etape => {
+      workflow.etapes?.forEach(etape => {
         if (etape.statut === 'COMPLETE' && etape.dateCompletee) {
           const cle = etape.nom;
           if (!dureesMoyennesParEtape[cle]) {
