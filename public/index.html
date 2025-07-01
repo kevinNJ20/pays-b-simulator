@@ -184,6 +184,17 @@
             padding: 15px 30px;
         }
 
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
         .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
@@ -554,6 +565,146 @@
             overflow-y: auto;
         }
 
+        /* Styles pour la modal de recouvrement */
+        .recouvrement-container {
+            margin-top: 20px;
+        }
+
+        .recouvrement-header {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f093fb;
+        }
+
+        .recouvrement-info h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .info-item label {
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+        }
+
+        .info-item span {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .taxes-container {
+            margin-bottom: 20px;
+        }
+
+        .taxes-container h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .taxes-table {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .taxes-header {
+            display: grid;
+            grid-template-columns: 80px 1fr 150px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            font-weight: bold;
+            padding: 15px;
+        }
+
+        .tax-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 150px;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.2s;
+        }
+
+        .tax-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .tax-row:last-child {
+            border-bottom: none;
+        }
+
+        .tax-code {
+            font-weight: bold;
+            color: #f093fb;
+            text-align: center;
+        }
+
+        .tax-libelle {
+            color: #2c3e50;
+        }
+
+        .tax-montant {
+            font-weight: bold;
+            color: #28a745;
+            text-align: right;
+        }
+
+        .recouvrement-total {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .total-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .total-label {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .total-amount {
+            font-weight: bold;
+            font-size: 1.4em;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .recouvrement-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .recouvrement-actions .btn {
+            flex: 1;
+            min-width: 160px;
+            max-width: 200px;
+        }
+
         .close {
             color: #aaa;
             float: right;
@@ -782,6 +933,82 @@
         </div>
     </div>
 
+    <!-- Modal pour le recouvrement -->
+    <div id="recouvrementModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="fermerModalRecouvrement()">&times;</span>
+            <h2>💰 Données de Recouvrement</h2>
+            <p>Détail des taxes et redevances calculées pour cette déclaration douanière.</p>
+            
+            <div class="recouvrement-container">
+                <!-- Informations principales -->
+                <div class="recouvrement-header">
+                    <div class="recouvrement-info">
+                        <h3>📋 Informations Déclaration</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Numéro Déclaration:</label>
+                                <span id="recouvr-numero"></span>
+                            </div>
+                            <div class="info-item">
+                                <label>Année:</label>
+                                <span id="recouvr-annee"></span>
+                            </div>
+                            <div class="info-item">
+                                <label>Bureau:</label>
+                                <span id="recouvr-bureau"></span>
+                            </div>
+                            <div class="info-item">
+                                <label>Date Règlement:</label>
+                                <span id="recouvr-date"></span>
+                            </div>
+                            <div class="info-item">
+                                <label>Mode Règlement:</label>
+                                <span id="recouvr-mode"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Détail des taxes -->
+                <div class="taxes-container">
+                    <h3>📊 Détail des Taxes et Redevances</h3>
+                    <div class="taxes-table">
+                        <div class="taxes-header">
+                            <div class="tax-code">Code</div>
+                            <div class="tax-libelle">Libellé</div>
+                            <div class="tax-montant">Montant (FCFA)</div>
+                        </div>
+                        <div id="taxes-list">
+                            <!-- Les taxes seront ajoutées dynamiquement -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total -->
+                <div class="recouvrement-total">
+                    <div class="total-line">
+                        <span class="total-label">MONTANT TOTAL À RECOUVRER:</span>
+                        <span class="total-amount" id="recouvr-total">0 FCFA</span>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="recouvrement-actions">
+                    <button class="btn btn-primary" onclick="procederPaiement()">
+                        💳 Procéder au Paiement
+                    </button>
+                    <button class="btn btn-diagnostic" onclick="imprimerRecouvrement()">
+                        🖨️ Imprimer Bordereau
+                    </button>
+                    <button class="btn btn-secondary" onclick="fermerModalRecouvrement()">
+                        📄 Fermer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="notification" class="notification"></div>
 
     <script>
@@ -845,6 +1072,227 @@
         // Fermer la modal de déclaration
         function fermerModalDeclaration() {
             document.getElementById('declarationModal').style.display = 'none';
+        }
+
+        // Fermer la modal de recouvrement
+        function fermerModalRecouvrement() {
+            document.getElementById('recouvrementModal').style.display = 'none';
+        }
+
+        // Afficher la modal de recouvrement avec les données
+        function afficherModalRecouvrement(donneesDeclaration, donneesRecouvrement) {
+            // Remplir les informations principales
+            document.getElementById('recouvr-numero').textContent = donneesDeclaration.numeroDecl;
+            document.getElementById('recouvr-annee').textContent = donneesDeclaration.anneeDecl;
+            document.getElementById('recouvr-bureau').textContent = donneesDeclaration.bureauDecl;
+            document.getElementById('recouvr-date').textContent = donneesRecouvrement.dateReglement;
+            document.getElementById('recouvr-mode').textContent = donneesRecouvrement.modeReglement.toUpperCase();
+
+            // Remplir le tableau des taxes
+            const taxesList = document.getElementById('taxes-list');
+            taxesList.innerHTML = '';
+            
+            donneesRecouvrement.taxes.forEach(taxe => {
+                const taxRow = document.createElement('div');
+                taxRow.className = 'tax-row';
+                taxRow.innerHTML = `
+                    <div class="tax-code">${taxe.codeTaxe}</div>
+                    <div class="tax-libelle">${taxe.libelleTaxe}</div>
+                    <div class="tax-montant">${taxe.montantTaxe.toLocaleString()} FCFA</div>
+                `;
+                taxesList.appendChild(taxRow);
+            });
+
+            // Afficher le montant total
+            document.getElementById('recouvr-total').textContent = 
+                donneesRecouvrement.montantTotal.toLocaleString() + ' FCFA';
+
+            // Afficher la modal
+            document.getElementById('recouvrementModal').style.display = 'block';
+        }
+
+        // Simuler les données de recouvrement basées sur la déclaration
+        function simulerDonneesRecouvrement(declaration) {
+            // Calculer une valeur totale basée sur les articles
+            const valeurTotaleArticles = declaration.articles.reduce((total, article) => {
+                return total + parseInt(article.valeurCaf);
+            }, 0);
+
+            // Calculer les taxes de manière réaliste
+            const droitDouane = Math.round(valeurTotaleArticles * 0.15); // 15%
+            const redevanceStatistique = Math.round(valeurTotaleArticles * 0.01); // 1%
+            const prelevementSolidarite = Math.round(valeurTotaleArticles * 0.12); // 12%
+            const prelevementCEDEAO = Math.round(valeurTotaleArticles * 0.08); // 8%
+
+            const taxes = [
+                {
+                    codeTaxe: "01",
+                    libelleTaxe: "Droit de Douane",
+                    montantTaxe: droitDouane
+                },
+                {
+                    codeTaxe: "03",
+                    libelleTaxe: "Redevance Statistique",
+                    montantTaxe: redevanceStatistique
+                },
+                {
+                    codeTaxe: "30",
+                    libelleTaxe: "Prélèvement Communautaire de Solidarité",
+                    montantTaxe: prelevementSolidarite
+                },
+                {
+                    codeTaxe: "31",
+                    libelleTaxe: "Prélèvement Communautaire CEDEAO",
+                    montantTaxe: prelevementCEDEAO
+                }
+            ];
+
+            const montantTotal = taxes.reduce((total, taxe) => total + taxe.montantTaxe, 0);
+
+            return {
+                anneeDecl: declaration.anneeDecl,
+                bureauDecl: declaration.bureauDecl,
+                numeroDecl: declaration.numeroDecl,
+                dateReglement: new Date().toISOString().split('T')[0],
+                modeReglement: "comptant",
+                montantTotal: montantTotal,
+                taxes: taxes
+            };
+        }
+
+        // Procéder au paiement
+        function procederPaiement() {
+            afficherNotification('💳 Redirection vers le système de paiement...', 'info');
+            ajouterLogEntry('paiement', 'Paiement initié', 'Procédure de paiement démarrée');
+            
+            // Simuler une redirection ou une action de paiement
+            setTimeout(() => {
+                afficherNotification('✅ Paiement traité avec succès', 'success');
+                ajouterLogEntry('paiement', 'Paiement effectué', 'Paiement confirmé et traité');
+                fermerModalRecouvrement();
+                // Actualiser les données
+                chargerDonnees();
+            }, 2000);
+        }
+
+        // Imprimer le bordereau de recouvrement
+        function imprimerRecouvrement() {
+            // Créer une nouvelle fenêtre pour l'impression
+            const printWindow = window.open('', '_blank', 'width=800,height=600');
+            
+            const numeroDecl = document.getElementById('recouvr-numero').textContent;
+            const anneeDecl = document.getElementById('recouvr-annee').textContent;
+            const bureauDecl = document.getElementById('recouvr-bureau').textContent;
+            const dateReglement = document.getElementById('recouvr-date').textContent;
+            const modeReglement = document.getElementById('recouvr-mode').textContent;
+            const montantTotal = document.getElementById('recouvr-total').textContent;
+            
+            // Récupérer les taxes
+            const taxes = [];
+            document.querySelectorAll('#taxes-list .tax-row').forEach(row => {
+                const code = row.querySelector('.tax-code').textContent;
+                const libelle = row.querySelector('.tax-libelle').textContent;
+                const montant = row.querySelector('.tax-montant').textContent;
+                taxes.push({ code, libelle, montant });
+            });
+
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Bordereau de Recouvrement - ${numeroDecl}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+                        .info-section { margin-bottom: 20px; }
+                        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+                        .info-item { padding: 5px 0; }
+                        .info-label { font-weight: bold; }
+                        .taxes-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        .taxes-table th, .taxes-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                        .taxes-table th { background-color: #f2f2f2; }
+                        .total-section { margin-top: 30px; padding: 15px; background-color: #f8f9fa; border: 2px solid #28a745; text-align: center; }
+                        .total-amount { font-size: 1.5em; font-weight: bold; color: #28a745; }
+                        .footer { margin-top: 40px; text-align: center; font-size: 0.9em; color: #666; }
+                        @media print { .no-print { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>🏔️ BURKINA FASO</h1>
+                        <h2>DIRECTION GÉNÉRALE DES DOUANES</h2>
+                        <h3>BORDEREAU DE RECOUVREMENT</h3>
+                    </div>
+                    
+                    <div class="info-section">
+                        <h3>Informations de la Déclaration</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Numéro de Déclaration:</span> ${numeroDecl}
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Année:</span> ${anneeDecl}
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Bureau:</span> ${bureauDecl}
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Date de Règlement:</span> ${dateReglement}
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Mode de Règlement:</span> ${modeReglement}
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Date d'édition:</span> ${new Date().toLocaleDateString('fr-FR')}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="taxes-section">
+                        <h3>Détail des Taxes et Redevances</h3>
+                        <table class="taxes-table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Libellé de la Taxe</th>
+                                    <th>Montant (FCFA)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${taxes.map(taxe => `
+                                    <tr>
+                                        <td>${taxe.code}</td>
+                                        <td>${taxe.libelle}</td>
+                                        <td style="text-align: right;">${taxe.montant}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="total-section">
+                        <h3>MONTANT TOTAL À RECOUVRER</h3>
+                        <div class="total-amount">${montantTotal}</div>
+                    </div>
+                    
+                    <div class="footer">
+                        <p>Document généré automatiquement par le Système Douanier du Burkina Faso</p>
+                        <p>Kit d'Interconnexion UEMOA - ${new Date().toLocaleString('fr-FR')}</p>
+                    </div>
+                    
+                    <div class="no-print" style="text-align: center; margin-top: 20px;">
+                        <button onclick="window.print()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">🖨️ Imprimer</button>
+                        <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">Fermer</button>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            
+            ajouterLogEntry('impression', 'Bordereau imprimé', `Bordereau de recouvrement généré pour déclaration ${numeroDecl}`);
+            afficherNotification('🖨️ Bordereau de recouvrement généré', 'success');
         }
 
         // Ajouter un article au formulaire
@@ -998,7 +1446,17 @@
                     const result = await response.json();
                     afficherNotification('✅ Déclaration soumise avec succès', 'success');
                     ajouterLogEntry('declaration', 'Nouvelle déclaration', `Déclaration ${declaration.numeroDecl} soumise vers Kit MuleSoft`);
+                    
+                    // Fermer la modal de déclaration
                     fermerModalDeclaration();
+                    
+                    // Simuler et afficher les données de recouvrement
+                    const donneesRecouvrement = simulerDonneesRecouvrement(declaration);
+                    
+                    // Afficher la modal de recouvrement après un court délai
+                    setTimeout(() => {
+                        afficherModalRecouvrement(declaration, donneesRecouvrement);
+                    }, 500);
                     
                     // Actualiser la liste des déclarations
                     setTimeout(() => chargerDeclarations(), 1000);
@@ -1266,9 +1724,15 @@
 
         // Fermer la modal si on clique à l'extérieur
         window.onclick = function(event) {
-            const modal = document.getElementById('declarationModal');
-            if (event.target === modal) {
+            const declarationModal = document.getElementById('declarationModal');
+            const recouvrementModal = document.getElementById('recouvrementModal');
+            
+            if (event.target === declarationModal) {
                 fermerModalDeclaration();
+            }
+            
+            if (event.target === recouvrementModal) {
+                fermerModalRecouvrement();
             }
         }
     </script>

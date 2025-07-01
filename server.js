@@ -31,7 +31,7 @@ const mimeTypes = {
   '.svg': 'image/svg+xml'
 };
 
-// Router pour les APIs PAYS B
+// Router pour les APIs PAYS B - SEULE LIGNE AJOUTÉE ✅
 const apiRouter = {
   'GET /api/health': () => require('./api/health'),
   'GET /api/statistiques': () => require('./api/statistiques'),
@@ -39,6 +39,7 @@ const apiRouter = {
   'POST /api/manifeste/reception': () => require('./api/manifeste/reception'),
   'GET /api/manifeste/lister': () => require('./api/manifeste/lister'),
   'GET /api/declaration/lister': () => require('./api/declaration/lister'),
+  'POST /api/declaration/soumettre': () => require('./api/declaration/soumettre'), // ✅ CETTE LIGNE AJOUTÉE
   'POST /api/paiement/effectuer': () => require('./api/paiement/effectuer'),
   'GET /api/paiement/lister': () => require('./api/paiement/lister'),
   'GET /api/kit/test': () => require('./api/kit/test'),

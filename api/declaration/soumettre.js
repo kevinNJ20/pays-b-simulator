@@ -1,5 +1,5 @@
 // ============================================================================
-// PAYS B - Endpoint Soumission Déclaration vers Kit MuleSoft
+// PAYS B - Endpoint Soumission Déclaration vers Kit MuleSoft - VERSION CORRIGÉE
 // Fichier: api/declaration/soumettre.js
 // ============================================================================
 
@@ -20,11 +20,21 @@ module.exports = async (req, res) => {
     try {
       console.log('📋 [Pays B] Soumission déclaration douanière vers Kit MuleSoft:', req.body);
       
+      // ✅ VALIDATION: Vérifier que req.body existe et n'est pas vide
+      if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({
+          status: 'ERROR',
+          message: 'Aucune donnée reçue dans la requête',
+          timestamp: new Date().toISOString()
+        });
+      }
+
       const { anneeDecl, bureauDecl, numeroDecl, dateDecl, articles } = req.body;
       
       // Validation des données requises
       const erreurs = validerDeclaration(req.body);
       if (erreurs.length > 0) {
+        console.log('❌ [Pays B] Validation échouée:', erreurs);
         return res.status(400).json({
           status: 'ERROR',
           message: 'Données de déclaration invalides',
@@ -57,7 +67,7 @@ module.exports = async (req, res) => {
 
       console.log(`📤 [Pays B] Envoi déclaration ${numeroDecl} vers Kit MuleSoft`);
 
-      // Envoyer vers Kit MuleSoft
+      // ✅ CORRECTION: Utiliser la nouvelle méthode soumettreDeclaration
       const reponseKit = await kitClient.soumettreDeclaration(declarationKit);
       
       console.log(`✅ [Pays B] Déclaration ${numeroDecl} envoyée avec succès vers Kit MuleSoft`);
@@ -84,12 +94,15 @@ module.exports = async (req, res) => {
         kit: {
           status: reponseKit.status,
           correlationId: reponseKit.correlationId,
-          timestamp: reponseKit.timestamp
+          timestamp: reponseKit.timestamp,
+          latence: reponseKit.latence,
+          source: reponseKit.source
         },
         traitementLocal: {
           mode: 'TRANSFERE_VERS_KIT',
           destination: 'KIT_MULESOFT',
-          format: 'DECLARATION_DOUANIERE'
+          format: 'DECLARATION_DOUANIERE',
+          endpoint: '/declaration/soumission'
         },
         timestamp: new Date().toISOString()
       });
@@ -97,26 +110,58 @@ module.exports = async (req, res) => {
     } catch (error) {
       console.error('❌ [Pays B] Erreur soumission déclaration vers Kit:', error);
       
-      res.status(500).json({
+      // ✅ AMÉLIORATION: Gestion spécifique des différents types d'erreurs
+      let statusCode = 500;
+      let errorDetails = {
+        type: 'INTERNAL_ERROR',
+        suggestion: 'Vérifier les logs serveur'
+      };
+
+      if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT')) {
+        statusCode = 504;
+        errorDetails = {
+          type: 'TIMEOUT_ERROR',
+          suggestion: 'Kit MuleSoft ne répond pas - Réessayer plus tard'
+        };
+      } else if (error.message.includes('ECONNREFUSED') || error.message.includes('ENOTFOUND')) {
+        statusCode = 503;
+        errorDetails = {
+          type: 'CONNECTION_ERROR',
+          suggestion: 'Kit MuleSoft inaccessible - Vérifier la connectivité'
+        };
+      } else if (error.message.includes('400') || error.message.includes('Bad Request')) {
+        statusCode = 400;
+        errorDetails = {
+          type: 'VALIDATION_ERROR',
+          suggestion: 'Données de déclaration non conformes au format MuleSoft'
+        };
+      }
+      
+      res.status(statusCode).json({
         status: 'ERROR',
         message: 'Erreur lors de la soumission de la déclaration vers Kit MuleSoft',
         erreur: error.message,
-        details: {
-          type: 'KIT_COMMUNICATION_ERROR',
-          suggestion: 'Vérifier la connectivité avec le Kit MuleSoft'
+        details: errorDetails,
+        debug: {
+          kitUrl: kitClient.baseURL,
+          endpoint: '/declaration/soumission',
+          method: 'POST',
+          timestamp: new Date().toISOString()
         },
         timestamp: new Date().toISOString()
       });
     }
   } else {
     res.status(405).json({ 
-      erreur: 'Méthode non autorisée',
-      methodesAutorisees: ['POST', 'OPTIONS']
+      status: 'ERROR',
+      message: 'Méthode non autorisée',
+      methodesAutorisees: ['POST', 'OPTIONS'],
+      timestamp: new Date().toISOString()
     });
   }
 };
 
-// Fonction de validation des données de déclaration
+// ✅ AMÉLIORATION: Validation plus robuste
 function validerDeclaration(donnees) {
   const erreurs = [];
 
@@ -135,6 +180,12 @@ function validerDeclaration(donnees) {
 
   if (!donnees.dateDecl || donnees.dateDecl.trim() === '') {
     erreurs.push('Date de déclaration requise');
+  } else {
+    // Vérifier format date
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(donnees.dateDecl)) {
+      erreurs.push('Format de date invalide (attendu: YYYY-MM-DD)');
+    }
   }
 
   // Validation articles
@@ -145,7 +196,7 @@ function validerDeclaration(donnees) {
       const position = index + 1;
 
       if (!article.numArt || isNaN(parseInt(article.numArt))) {
-        erreurs.push(`Article ${position}: Numéro d'article requis`);
+        erreurs.push(`Article ${position}: Numéro d'article requis et numérique`);
       }
 
       if (!article.connaissement || article.connaissement.trim() === '') {
@@ -154,6 +205,8 @@ function validerDeclaration(donnees) {
 
       if (!article.codeSh || article.codeSh.trim() === '') {
         erreurs.push(`Article ${position}: Code SH requis`);
+      } else if (article.codeSh.length < 6) {
+        erreurs.push(`Article ${position}: Code SH doit contenir au moins 6 caractères`);
       }
 
       if (!article.designationCom || article.designationCom.trim() === '') {
@@ -164,13 +217,28 @@ function validerDeclaration(donnees) {
         erreurs.push(`Article ${position}: Origine requise`);
       }
 
-      // Validation valeurs numériques
-      const valeursNumeriques = ['nbreColis', 'poidsBrut', 'poidsNet', 'valeurCaf', 'liquidation'];
-      valeursNumeriques.forEach(champ => {
-        if (!article[champ] || isNaN(parseInt(article[champ])) || parseInt(article[champ]) <= 0) {
-          erreurs.push(`Article ${position}: ${champ} requis et doit être numérique positif`);
+      // Validation valeurs numériques avec vérification de cohérence
+      const valeursNumeriques = [
+        { champ: 'nbreColis', min: 1 },
+        { champ: 'poidsBrut', min: 1 },
+        { champ: 'poidsNet', min: 1 },
+        { champ: 'valeurCaf', min: 1 },
+        { champ: 'liquidation', min: 0 }
+      ];
+      
+      valeursNumeriques.forEach(({ champ, min }) => {
+        const valeur = parseInt(article[champ]);
+        if (!article[champ] || isNaN(valeur) || valeur < min) {
+          erreurs.push(`Article ${position}: ${champ} requis et doit être >= ${min}`);
         }
       });
+
+      // Vérification cohérence poids
+      const poidsBrut = parseInt(article.poidsBrut);
+      const poidsNet = parseInt(article.poidsNet);
+      if (!isNaN(poidsBrut) && !isNaN(poidsNet) && poidsNet > poidsBrut) {
+        erreurs.push(`Article ${position}: Poids net ne peut pas être supérieur au poids brut`);
+      }
     });
   }
 
