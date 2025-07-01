@@ -4,7 +4,7 @@ module.exports = async (req, res) => {
   // Configuration CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Source-Country, X-Source-System, X-Correlation-ID');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Source-Country, X-Source-System, X-Correlation-ID, X-Manifeste-Format');
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -17,49 +17,73 @@ module.exports = async (req, res) => {
         source: req.headers['x-source-system'],
         pays: req.headers['x-source-country'],
         correlationId: req.headers['x-correlation-id'],
-        manifeste: req.body?.manifeste?.numeroOrigine
+        format: req.headers['x-manifeste-format'],
+        bodyKeys: Object.keys(req.body || {})
       });
       
-      // ✅ CORRECTION: Validation adaptée aux données du Kit MuleSoft
-      const erreurs = validerManifesteDepuisKit(req.body);
+      // ✅ CORRECTION: Détecter et transformer le format UEMOA
+      let manifesteFormate;
+      const formatDetecte = detecterFormatManifeste(req.body);
+      
+      console.log(`🔍 [Pays B] Format détecté: ${formatDetecte}`);
+      
+      if (formatDetecte === 'UEMOA') {
+        // Transformer le format UEMOA vers le format Pays B
+        manifesteFormate = transformerFormatUEMOA(req.body);
+        console.log('🔄 [Pays B] Transformation UEMOA → Pays B effectuée');
+      } else if (formatDetecte === 'PAYS_B') {
+        // Format déjà correct
+        manifesteFormate = req.body;
+        console.log('✅ [Pays B] Format Pays B natif détecté');
+      } else {
+        throw new Error(`Format de manifeste non reconnu: ${formatDetecte}`);
+      }
+      
+      // Validation du manifeste transformé
+      const erreurs = validerManifesteFormate(manifesteFormate);
       if (erreurs.length > 0) {
-        console.log('❌ [Pays B] Manifeste Kit MuleSoft invalide:', erreurs);
+        console.log('❌ [Pays B] Manifeste invalide après transformation:', erreurs);
         return res.status(400).json({
           status: 'ERROR',
-          message: 'Données manifeste du Kit MuleSoft invalides',
+          message: 'Données manifeste invalides après transformation',
           erreurs,
+          formatDetecte,
           timestamp: new Date().toISOString()
         });
       }
 
       // Enregistrer le manifeste et démarrer le workflow automatique
       const manifesteRecu = database.recevoirManifesteDepuisKit({
-        ...req.body,
+        ...manifesteFormate,
+        formatOrigine: formatDetecte,
         headers: {
           sourceSystem: req.headers['x-source-system'],
           sourcePays: req.headers['x-source-country'],
-          correlationId: req.headers['x-correlation-id']
+          correlationId: req.headers['x-correlation-id'],
+          formatManifeste: req.headers['x-manifeste-format']
         }
       });
 
-      console.log(`✅ [Pays B] Manifeste reçu depuis Kit MuleSoft et workflow démarré: ${manifesteRecu.id}`);
+      console.log(`✅ [Pays B] Manifeste ${formatDetecte} reçu et workflow démarré: ${manifesteRecu.id}`);
       console.log(`🔄 [Pays B] Traitement automatique en cours...`);
 
-      // ✅ CORRECTION: Réponse adaptée pour MuleSoft
+      // ✅ CORRECTION: Réponse adaptée avec info sur le format
       const reponse = {
         status: 'RECEIVED',
-        message: 'Manifeste reçu du Kit MuleSoft, traitement automatique démarré',
+        message: `Manifeste ${formatDetecte} reçu du Kit MuleSoft, traitement automatique démarré`,
         
         manifeste: {
           id: manifesteRecu.id,
           numeroOrigine: manifesteRecu.manifeste?.numeroOrigine,
           transporteur: manifesteRecu.manifeste?.transporteur,
           nombreMarchandises: manifesteRecu.marchandises?.length || 0,
-          dateReception: manifesteRecu.dateReception
+          dateReception: manifesteRecu.dateReception,
+          formatOrigine: formatDetecte
         },
         
         traitement: {
           mode: 'AUTOMATIQUE',
+          formatSupporte: formatDetecte,
           etapesPlannifiees: [
             { etape: 'DECLARATION', delai: '2 secondes', statut: 'PLANIFIEE' },
             { etape: 'LIQUIDATION', delai: '5 secondes', statut: 'PLANIFIEE' },
@@ -76,16 +100,23 @@ module.exports = async (req, res) => {
         },
         
         workflow: {
-          id: manifesteRecu.id, // Le workflow utilise l'ID du manifeste
+          id: manifesteRecu.id,
           statut: 'DEMARRE',
           etapeActuelle: 'DECLARATION'
         },
         
-        // ✅ NOUVEAU: Informations pour MuleSoft
-        kit: {
-          acknowledgment: 'SUCCESS',
-          processedBy: 'PAYS_B_DOUANES',
-          estimatedCompletion: new Date(Date.now() + 15000).toISOString()
+        // ✅ NOUVEAU: Informations sur la transformation de format
+        transformation: {
+          formatEntree: formatDetecte,
+          formatInterne: 'PAYS_B',
+          champsTransformes: formatDetecte === 'UEMOA' ? [
+            'manifeste.numero_origine → manifeste.numeroOrigine',
+            'manifeste.consignataire → manifeste.transporteur',
+            'articles → marchandises',
+            'articles[].description → marchandises[].description',
+            'articles[].destinataire → marchandises[].importateur',
+            'articles[].poids_brut → marchandises[].poidsBrut'
+          ] : ['Aucune transformation requise']
         },
         
         timestamp: new Date().toISOString(),
@@ -95,7 +126,7 @@ module.exports = async (req, res) => {
       res.status(200).json(reponse);
       
       // Log pour monitoring
-      console.log(`📊 [Pays B] Workflow automatique initié pour manifeste Kit MuleSoft ${manifesteRecu.manifeste?.numeroOrigine}`);
+      console.log(`📊 [Pays B] Workflow automatique initié pour manifeste ${formatDetecte} ${manifesteRecu.manifeste?.numeroOrigine}`);
       
     } else if (req.method === 'GET') {
       // Lister les manifestes reçus (pour le dashboard)
@@ -115,7 +146,8 @@ module.exports = async (req, res) => {
           nombreMarchandises: manifeste.marchandises?.length || 0,
           dateReception: manifeste.dateReception,
           statut: manifeste.statut,
-          sourceKit: manifeste.sourceKit
+          sourceKit: manifeste.sourceKit,
+          formatOrigine: manifeste.formatOrigine || 'INCONNU'
         })),
         pagination: {
           limite,
@@ -144,13 +176,118 @@ module.exports = async (req, res) => {
   }
 };
 
-// ✅ CORRECTION: Validation adaptée aux données du Kit MuleSoft
-function validerManifesteDepuisKit(donnees) {
+// ✅ NOUVELLE FONCTION: Détecter le format du manifeste
+function detecterFormatManifeste(donnees) {
+  if (!donnees || typeof donnees !== 'object') {
+    return 'INVALIDE';
+  }
+
+  // Format UEMOA du Kit MuleSoft
+  if (donnees.manifeste && donnees.articles && Array.isArray(donnees.articles)) {
+    if (donnees.manifeste.numero_origine !== undefined || 
+        donnees.manifeste.format === 'UEMOA' ||
+        donnees.articles.some(art => art.numero_article !== undefined)) {
+      return 'UEMOA';
+    }
+  }
+
+  // Format Pays B natif
+  if (donnees.manifeste && donnees.marchandises && Array.isArray(donnees.marchandises)) {
+    if (donnees.manifeste.numeroOrigine !== undefined ||
+        donnees.marchandises.some(marc => marc.importateur !== undefined)) {
+      return 'PAYS_B';
+    }
+  }
+
+  return 'INCONNU';
+}
+
+// ✅ NOUVELLE FONCTION: Transformer format UEMOA vers format Pays B
+function transformerFormatUEMOA(donneesUEMOA) {
+  const manifesteUEMOA = donneesUEMOA.manifeste;
+  const articlesUEMOA = donneesUEMOA.articles;
+
+  return {
+    manifeste: {
+      // Transformations clés manifeste
+      numeroOrigine: manifesteUEMOA.numero_origine,
+      transporteur: manifesteUEMOA.consignataire || manifesteUEMOA.transporteur,
+      navire: manifesteUEMOA.navire,
+      portOrigine: manifesteUEMOA.provenance,
+      portDestination: manifesteUEMOA.port_destination || 'OUAGADOUGOU',
+      dateArrivee: manifesteUEMOA.date_arrivee,
+      paysOrigine: manifesteUEMOA.paysOrigine || 'CIV',
+      
+      // Champs spécifiques UEMOA préservés
+      format: 'UEMOA',
+      anneeManifeste: manifesteUEMOA.annee_manifeste,
+      bureauOrigine: manifesteUEMOA.bureau_origine,
+      codeCGT: manifesteUEMOA.code_cgt,
+      pavillon: manifesteUEMOA.pavillon
+    },
+    
+    // Transformation articles → marchandises
+    marchandises: articlesUEMOA.map((article, index) => ({
+      position: article.position || index + 1,
+      
+      // Informations de base
+      codeTarifaire: article.code_sh || article.codeTarifaire,
+      description: article.description || article.marchandise,
+      designation: article.description || article.marchandise,
+      
+      // Poids et quantités
+      poidsBrut: article.poids_brut || article.poids,
+      poidsNet: article.poids_net || article.poids_brut || article.poids,
+      nombreColis: article.nombre_colis || article.nbre_colis,
+      quantite: article.quantite || article.nombre_colis || 1,
+      
+      // Parties concernées
+      importateur: article.destinataire,
+      destinataire: article.destinataire,
+      expediteur: article.expediteur,
+      
+      // Informations transport
+      connaissement: article.connaissement,
+      marque: article.marque,
+      modeConditionnement: article.mode_conditionnement || article.mode_cond,
+      
+      // Informations destination
+      villeDestination: article.ville_destination || article.ville_dest,
+      voieDestination: article.voie_destination || article.voie_dest,
+      ordre: article.ordre,
+      
+      // Dates
+      dateEmbarquement: article.date_embarquement || article.date_emb,
+      lieuEmbarquement: article.lieu_embarquement || article.lieu_emb,
+      
+      // Conteneurs
+      conteneurs: article.conteneurs?.map(conteneur => ({
+        numero: conteneur.numero || conteneur.conteneur,
+        type: conteneur.type,
+        taille: conteneur.taille,
+        plomb: conteneur.plomb
+      })) || [],
+      nombreConteneurs: article.nombre_conteneurs || article.nbre_conteneur || 0,
+      
+      // Valeur estimée (calculée si pas présente)
+      valeurEstimee: article.valeur_estimee || 
+                     ((article.poids_brut || article.poids || 1000) * 200),
+      
+      // Champs UEMOA spécifiques
+      numeroArticle: article.numero_article,
+      precision1: article.precision_1,
+      precision2: article.precision_2
+    }))
+  };
+}
+
+// ✅ NOUVELLE FONCTION: Validation du manifeste formaté
+function validerManifesteFormate(donnees) {
   const erreurs = [];
 
   // Vérification structure générale
   if (!donnees || typeof donnees !== 'object') {
-    erreurs.push('Données manifeste Kit MuleSoft manquantes ou invalides');
+    erreurs.push('Données manifeste manquantes ou invalides');
     return erreurs;
   }
 
@@ -160,7 +297,7 @@ function validerManifesteDepuisKit(donnees) {
   } else {
     const manifeste = donnees.manifeste;
     
-    if (!manifeste.numeroOrigine || manifeste.numeroOrigine.trim() === '') {
+    if (!manifeste.numeroOrigine || manifeste.numeroOrigine.toString().trim() === '') {
       erreurs.push('Numéro de manifeste origine requis');
     }
     
