@@ -1160,20 +1160,167 @@
             };
         }
 
-        // Procéder au paiement
-        function procederPaiement() {
-            afficherNotification('💳 Redirection vers le système de paiement...', 'info');
-            ajouterLogEntry('paiement', 'Paiement initié', 'Procédure de paiement démarrée');
+        // Fonction helper pour charger les déclarations
+        async function chargerDeclarationsData() {
+            try {
+                const response = await fetch(`${API_BASE}/declaration/lister?limite=50`);
+                const data = await response.json();
+                
+                if (data.status === 'SUCCESS' && data.declarations) {
+                    return data.declarations;
+                }
+                return [];
+            } catch (error) {
+                console.error('Erreur chargement déclarations:', error);
+                return [];
+            }
+        }
+
+        // Fonction pour recevoir la notification d'apurement réussi
+        window.notifierApurementReussi = function(resultat) {
+            console.log('Notification apurement reçu de Pays A:', resultat);
             
-            // Simuler une redirection ou une action de paiement
-            setTimeout(() => {
-                afficherNotification('✅ Paiement traité avec succès', 'success');
-                ajouterLogEntry('paiement', 'Paiement effectué', 'Paiement confirmé et traité');
-                fermerModalRecouvrement();
+            if (resultat && resultat.status === 'SUCCESS') {
+                // Envoyer un message via postMessage aussi
+                window.postMessage({
+                    type: 'APUREMENT_COMPLETE',
+                    numeroManifeste: resultat.apurement.numeroManifeste,
+                    referencePaiement: resultat.apurement.referencePaiement
+                }, '*');
+            }
+        };
+
+        // Fonction pour enregistrer le paiement via l'API
+        async function enregistrerPaiement(donneesPaiement) {
+            try {
+                const response = await fetch(`${API_BASE}/paiement/effectuer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Source-System': 'PAYS_B_DOUANES',
+                        'X-Source-Country': 'BFA'
+                    },
+                    body: JSON.stringify(donneesPaiement)
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Erreur lors de l\'enregistrement du paiement');
+                }
+                
+                const result = await response.json();
+                console.log('Paiement enregistré:', result);
+                return result;
+                
+            } catch (error) {
+                console.error('Erreur enregistrement paiement:', error);
+                throw error;
+            }
+        }
+
+        // Gérer les messages depuis Pays A
+        function handleMessageFromPaysA(event) {
+            // Vérifier l'origine pour la sécurité
+            if (event.origin !== 'http://localhost:3001') return;
+            
+            const data = event.data;
+            if (data.type === 'APUREMENT_COMPLETE') {
+                ajouterLogEntry('apurement', 'Apurement confirmé', `Manifeste ${data.numeroManifeste} apuré avec succès`);
+                afficherNotification('✅ Apurement confirmé - Les marchandises peuvent être levées', 'success');
+                
                 // Actualiser les données
                 chargerDonnees();
+                
+                // Retirer l'écouteur
+                window.removeEventListener('message', handleMessageFromPaysA);
+            }
+        }
+
+        // Nouvelle fonction pour ouvrir l'interface d'apurement dans Pays A
+        function ouvrirApurementPaysA(numeroManifeste, referencePaiement) {
+            // URL de Pays A avec les paramètres d'apurement
+            const urlPaysA = `http://localhost:3001/?apurement_manifeste=${encodeURIComponent(numeroManifeste)}&apurement_paiement=${encodeURIComponent(referencePaiement)}`;
+            
+            ajouterLogEntry('apurement', 'Ouverture Pays A', `Transfert vers système d'origine pour apurement`);
+            afficherNotification('🔓 Ouverture de l\'interface d\'apurement...', 'info');
+            
+            // Ouvrir dans une nouvelle fenêtre
+            const fenetreApurement = window.open(
+                urlPaysA,
+                'ApurementPaysA',
+                'width=1400,height=900,scrollbars=yes,resizable=yes,toolbar=no,menubar=no'
+            );
+            
+            if (fenetreApurement) {
+                // Stocker la référence de la fenêtre pour communication future
+                window.fenetreApurement = fenetreApurement;
+                
+                // Écouter les messages de Pays A
+                window.addEventListener('message', handleMessageFromPaysA);
+                
+                ajouterLogEntry('apurement', 'Fenêtre ouverte', 'Interface d\'apurement Pays A active');
+            } else {
+                afficherNotification('❌ Impossible d\'ouvrir l\'interface d\'apurement. Vérifiez les pop-ups.', 'error');
+            }
+        }
+
+        // Procéder au paiement et ouvrir l'apurement dans Pays A
+        async function procederPaiement() {
+            const numeroDecl = document.getElementById('recouvr-numero').textContent;
+            const montantTotal = parseInt(document.getElementById('recouvr-total').textContent.replace(/[^\d]/g, ''));
+            
+            // Stocker les informations pour l'apurement
+            window.dernierPaiement = {
+                numeroDeclaration: numeroDecl,
+                montant: montantTotal,
+                date: new Date().toISOString()
+            };
+            
+            afficherNotification('💳 Traitement du paiement...', 'info');
+            ajouterLogEntry('paiement', 'Paiement initié', 'Procédure de paiement démarrée');
+            
+            // Simuler le traitement du paiement
+            setTimeout(async () => {
+                try {
+                    // Générer une référence de paiement
+                    const referencePaiement = `PAY_${Date.now()}`;
+                    
+                    // Récupérer le numéro de manifeste depuis la déclaration
+                    const declarations = await chargerDeclarationsData();
+                    const declaration = declarations.find(d => d.numeroDeclaration === numeroDecl);
+                    
+                    if (!declaration || !declaration.manifesteOrigine) {
+                        throw new Error('Impossible de trouver le manifeste associé à cette déclaration');
+                    }
+                    
+                    // Enregistrer le paiement localement
+                    await enregistrerPaiement({
+                        numeroDeclaration: numeroDecl,
+                        manifesteOrigine: declaration.manifesteOrigine,
+                        numeroManifesteOrigine: declaration.numeroManifesteOrigine,
+                        montantPaye: montantTotal,
+                        referencePaiement: referencePaiement,
+                        modePaiement: 'ELECTRONIQUE'
+                    });
+                    
+                    afficherNotification('✅ Paiement enregistré avec succès', 'success');
+                    ajouterLogEntry('paiement', 'Paiement confirmé', `Référence: ${referencePaiement}`);
+                    
+                    // Fermer la modal de recouvrement
+                    fermerModalRecouvrement();
+                    
+                    // Ouvrir l'interface d'apurement dans Pays A
+                    setTimeout(() => {
+                        ouvrirApurementPaysA(declaration.numeroManifesteOrigine, referencePaiement);
+                    }, 1000);
+                    
+                } catch (error) {
+                    console.error('Erreur lors du paiement:', error);
+                    afficherNotification('❌ Erreur: ' + error.message, 'error');
+                }
             }, 2000);
         }
+
 
         // Imprimer le bordereau de recouvrement
         function imprimerRecouvrement() {
@@ -1620,28 +1767,50 @@
             }
         }
 
-        // Charger paiements (simplifié)
+        // Charger paiements avec état d'apurement
         async function chargerPaiements() {
             try {
-                const response = await fetch(`${API_BASE}/paiement/lister?limite=3`);
+                const response = await fetch(`${API_BASE}/paiement/lister?limite=5`);
                 const data = await response.json();
                 
                 const container = document.getElementById('paiements-list');
                 
                 if (data.status === 'SUCCESS' && data.paiements && data.paiements.length > 0) {
-                    container.innerHTML = data.paiements.map(paiement => `
-                        <div class="data-item automated">
-                            <div class="item-header">
-                                💳 ${paiement.id}
-                                <span class="item-status success">CONFIRME</span>
+                    container.innerHTML = data.paiements.map(paiement => {
+                        // Vérifier l'état d'apurement
+                        const estApure = paiement.apurement && paiement.apurement.statut === 'CONFIRME';
+                        const classeApurement = estApure ? 'apure' : 'automated';
+                        const statusClass = estApure ? 'apure' : 'success';
+                        const statusText = estApure ? 'APURÉ' : 'CONFIRMÉ';
+                        
+                        let html = `
+                            <div class="data-item ${classeApurement}">
+                                <div class="item-header">
+                                    💳 ${paiement.id}
+                                    <span class="item-status ${statusClass}">${statusText}</span>
+                                </div>
+                                <div class="item-details">
+                                    💰 Montant: ${paiement.montantPaye.toLocaleString()} FCFA<br>
+                                    🏦 Mode: ${paiement.modePaiement}<br>
+                                    📅 ${new Date(paiement.datePaiement).toLocaleString('fr-FR')}
+                        `;
+                        
+                        if (estApure) {
+                            html += `<br>🔓 Apuré le: ${new Date(paiement.apurement.dateApurement).toLocaleDateString('fr-FR')}`;
+                        } else if (paiement.manifesteOrigine && paiement.referencePaiement) {
+                            // Ajouter un bouton pour ouvrir l'apurement manuellement si pas encore fait
+                            html += `<br><button class="btn btn-apurement" onclick="ouvrirApurementPaysA('${paiement.manifesteOrigine}', '${paiement.referencePaiement}')">
+                                🔓 Procéder à l'apurement
+                            </button>`;
+                        }
+                        
+                        html += `
+                                </div>
                             </div>
-                            <div class="item-details">
-                                💰 Montant: ${paiement.montantPaye.toLocaleString()} FCFA<br>
-                                🏦 Mode: ${paiement.modePaiement}<br>
-                                📅 ${new Date(paiement.datePaiement).toLocaleString('fr-FR')}
-                            </div>
-                        </div>
-                    `).join('');
+                        `;
+                        
+                        return html;
+                    }).join('');
                 } else {
                     container.innerHTML = '<p>Aucun paiement effectué</p>';
                 }

@@ -228,6 +228,44 @@ body {
     background: linear-gradient(135deg, #007bff, #6610f2);
 }
 
+/* Styles pour l'état d'apurement */
+.data-item.apure {
+    border-left-color: #9c27b0;
+    background: #f3e5f5;
+}
+
+.item-status.apure {
+    background: #e1bee7;
+    color: #4a148c;
+}
+
+/* Indicateur d'apurement en cours */
+.apurement-indicator {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 3px 8px;
+    background: #673ab7;
+    color: white;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: bold;
+    animation: pulse 2s infinite;
+}
+
+/* Bouton d'apurement manuel */
+.btn-apurement {
+    background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%);
+    color: white;
+    font-size: 12px;
+    padding: 6px 12px;
+    margin-top: 8px;
+}
+
+.btn-apurement:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
+}
+
 @media (max-width: 768px) {
     .workflow {
         flex-direction: column;

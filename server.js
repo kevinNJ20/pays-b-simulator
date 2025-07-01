@@ -43,7 +43,9 @@ const apiRouter = {
   'POST /api/paiement/effectuer': () => require('./api/paiement/effectuer'),
   'GET /api/paiement/lister': () => require('./api/paiement/lister'),
   'GET /api/kit/test': () => require('./api/kit/test'),
-  'POST /api/kit/test': () => require('./api/kit/test')
+  'POST /api/kit/test': () => require('./api/kit/test'),
+  // Ajouter dans apiRouter
+  'POST /api/apurement/notification': () => require('./api/apurement/notification')
 };
 
 // Fonction pour créer un objet de réponse compatible Vercel
