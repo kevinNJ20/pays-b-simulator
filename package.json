@@ -4,27 +4,25 @@
   "description": "Simulateur Système Douanier Mali Bamako - Pays de destination UEMOA",
   "main": "server.js",
   "scripts": {
-    "dev": "vercel dev",
+    "dev": "node server.js",
     "start": "node server.js",
     "local": "node server.js"
   },
   "dependencies": {
+    "@vercel/node": "^5.3.24",
     "axios": "^1.6.0",
     "cors": "^2.8.5"
   },
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   },
   "keywords": [
     "douanes",
-    "uemoa", 
+    "uemoa",
     "mulesoft",
-    "hinterland",
-    "mali",
-    "bamako",
-    "workflow",
-    "libre-pratique",
-    "transit"
+    "interconnexion",
+    "senegal",
+    "dakar"
   ],
-  "author": "Mali - Bamako (Pays de destination UEMOA)"
+  "author": "Sénégal - Port de Dakar"
 }
