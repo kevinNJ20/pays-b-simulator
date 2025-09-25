@@ -1,7 +1,7 @@
 // ============================================================================
-// SERVEUR LOCAL PAYS B (HINTERLAND) - server.js
-// Burkina Faso - Système Douanier Hinterland avec Workflow Automatique
-// Compatible avec les APIs écrites pour Vercel
+// SERVEUR LOCAL MALI - server.js CORRIGÉ
+// Bamako - Pays de destination (Pays B selon rapport PDF UEMOA)
+// Compatible avec les APIs écrites pour Vercel - ÉTAPES 6-16 Manuel
 // ============================================================================
 
 const http = require('http');
@@ -9,14 +9,16 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
-// Configuration du serveur - PAYS B
+// ✅ Configuration du serveur - MALI (PAYS B selon rapport PDF)
 const PORT = process.env.PORT || 3002;
 const HOST = '0.0.0.0';
-const PAYS_CODE = 'BFA';
-const PAYS_NOM = 'Burkina Faso';
-const PAYS_TYPE = 'HINTERLAND';
+const PAYS_CODE = 'MLI'; // ✅ Mali
+const PAYS_NOM = 'Mali';
+const PAYS_TYPE = 'HINTERLAND'; // ✅ Pays de l'hinterland selon rapport PDF
+const PAYS_ROLE = 'PAYS_DESTINATION'; // ✅ Rôle selon rapport PDF
+const VILLE_NAME = 'Bamako'; // ✅ Capitale Mali
 
-console.log(`🏔️ Démarrage serveur ${PAYS_NOM} (${PAYS_TYPE})...`);
+console.log(`🇲🇱 Démarrage serveur ${PAYS_NOM} (${PAYS_TYPE}) - ${PAYS_ROLE}...`);
 
 // Types MIME
 const mimeTypes = {
@@ -31,21 +33,31 @@ const mimeTypes = {
   '.svg': 'image/svg+xml'
 };
 
-// Router pour les APIs PAYS B - SEULE LIGNE AJOUTÉE ✅
+// ✅ Router pour les APIs MALI - Workflow libre pratique ÉTAPES 6-16
 const apiRouter = {
+  // ✅ APIs principales Mali
   'GET /api/health': () => require('./api/health'),
   'GET /api/statistiques': () => require('./api/statistiques'),
+  
+  // ✅ ÉTAPE 6 : Réception manifeste depuis Kit MuleSoft
   'GET /api/manifeste/reception': () => require('./api/manifeste/reception'),
   'POST /api/manifeste/reception': () => require('./api/manifeste/reception'),
   'GET /api/manifeste/lister': () => require('./api/manifeste/lister'),
+  
+  // ✅ ÉTAPE 8 : Création déclaration (après collecte GUCE étape 7)
   'GET /api/declaration/lister': () => require('./api/declaration/lister'),
-  'POST /api/declaration/soumettre': () => require('./api/declaration/soumettre'), // ✅ CETTE LIGNE AJOUTÉE
+  'POST /api/declaration/soumettre': () => require('./api/declaration/soumettre'),
+  
+  // ✅ ÉTAPE 14 : Paiement droits et taxes
   'POST /api/paiement/effectuer': () => require('./api/paiement/effectuer'),
   'GET /api/paiement/lister': () => require('./api/paiement/lister'),
+  
+  // ✅ ÉTAPES 15-16 : Transmission vers Kit MuleSoft
+  'POST /api/apurement/notification': () => require('./api/apurement/notification'),
+  
+  // ✅ Tests Kit MuleSoft
   'GET /api/kit/test': () => require('./api/kit/test'),
-  'POST /api/kit/test': () => require('./api/kit/test'),
-  // Ajouter dans apiRouter
-  'POST /api/apurement/notification': () => require('./api/apurement/notification')
+  'POST /api/kit/test': () => require('./api/kit/test')
 };
 
 // Fonction pour créer un objet de réponse compatible Vercel
@@ -100,18 +112,18 @@ function createVercelRequest(req, body, query) {
   };
 }
 
-// Serveur HTTP
+// ✅ Serveur HTTP Mali
 const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
   const pathname = parsedUrl.pathname;
   const method = req.method;
 
-  console.log(`${method} ${pathname} - [${PAYS_CODE}]`);
+  console.log(`${method} ${pathname} - [${PAYS_CODE}] ${VILLE_NAME}`);
 
-  // CORS headers
+  // ✅ CORS headers pour interconnexion UEMOA
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Source-Country, X-Source-System, X-Correlation-ID');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Source-Country, X-Source-System, X-Correlation-ID, X-Manifeste-Format, X-Payment-Reference');
 
   if (method === 'OPTIONS') {
     res.writeHead(200);
@@ -120,7 +132,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
-    // Router API
+    // ✅ Router API avec routes spécifiques Mali
     const route = `${method} ${pathname}`;
     let handler = apiRouter[route];
     
@@ -153,7 +165,7 @@ const server = http.createServer(async (req, res) => {
               try {
                 resolve(data ? JSON.parse(data) : {});
               } catch (error) {
-                console.error('Erreur parsing JSON:', error);
+                console.error(`❌ [${PAYS_CODE}] Erreur parsing JSON:`, error);
                 resolve({});
               }
             });
@@ -172,18 +184,19 @@ const server = http.createServer(async (req, res) => {
         await apiHandler(vercelReq, vercelRes);
         
       } catch (error) {
-        console.error('❌ Erreur API:', error);
+        console.error(`❌ [${PAYS_CODE}] Erreur API:`, error);
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ 
           error: 'Internal Server Error', 
           message: error.message,
-          pays: PAYS_CODE
+          pays: PAYS_CODE,
+          ville: VILLE_NAME
         }));
       }
       return;
     }
 
-    // Servir les fichiers statiques
+    // ✅ Servir les fichiers statiques
     let filePath;
     if (pathname === '/') {
       filePath = path.join(__dirname, 'public', 'index.html');
@@ -199,7 +212,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': mimeType });
       fs.createReadStream(filePath).pipe(res);
     } else {
-      // 404
+      // ✅ 404 personnalisé Mali
       res.writeHead(404, { 'Content-Type': 'text/html' });
       res.end(`
         <html>
@@ -210,20 +223,38 @@ const server = http.createServer(async (req, res) => {
                 font-family: Arial, sans-serif; 
                 text-align: center; 
                 padding: 50px;
-                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                background: linear-gradient(135deg, #ce1126 0%, #14b53a 50%, #fcd116 100%);
                 color: white;
               }
               h1 { color: #e74c3c; }
               a { color: #3498db; text-decoration: none; }
-              .container { background: rgba(255,255,255,0.9); padding: 40px; border-radius: 15px; color: #333; display: inline-block; }
+              .container { 
+                background: rgba(255,255,255,0.9); 
+                padding: 40px; 
+                border-radius: 15px; 
+                color: #333; 
+                display: inline-block; 
+                max-width: 600px;
+                margin: 0 auto;
+              }
+              .flag { font-size: 3em; margin-bottom: 20px; }
+              .info { margin: 15px 0; color: #666; }
             </style>
           </head>
           <body>
             <div class="container">
-              <h1>🏔️ ${PAYS_NOM} (${PAYS_TYPE})</h1>
+              <div class="flag">🇲🇱</div>
+              <h1>${PAYS_NOM} - ${VILLE_NAME}</h1>
               <h2>404 - Page Non Trouvée</h2>
-              <p>La page ${pathname} n'existe pas sur le système douanier de ${PAYS_NOM}.</p>
-              <p><a href="/">← Retour au Dashboard ${PAYS_CODE}</a></p>
+              <p>La page ${pathname} n'existe pas sur le système douanier du ${PAYS_NOM}.</p>
+              <div class="info">
+                <strong>Rôle:</strong> ${PAYS_ROLE}<br>
+                <strong>Type:</strong> ${PAYS_TYPE}<br>
+                <strong>Ville:</strong> ${VILLE_NAME}<br>
+                <strong>Code pays:</strong> ${PAYS_CODE}<br>
+                <strong>Workflow:</strong> Étapes 6-16 (Manuel)
+              </div>
+              <p><a href="/">← Retour au Dashboard ${PAYS_NOM}</a></p>
             </div>
           </body>
         </html>
@@ -231,57 +262,81 @@ const server = http.createServer(async (req, res) => {
     }
 
   } catch (error) {
-    console.error('❌ Erreur serveur:', error);
+    console.error(`❌ [${PAYS_CODE}] Erreur serveur:`, error);
     res.writeHead(500, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
       error: 'Internal Server Error', 
       message: error.message,
-      pays: PAYS_CODE
+      pays: PAYS_CODE,
+      ville: VILLE_NAME
     }));
   }
 });
 
-// Démarrer le serveur
+// ✅ Démarrer le serveur Mali
 server.listen(PORT, HOST, () => {
   console.log('');
-  console.log('🏔️ ============================================================');
-  console.log(`🏔️ Serveur ${PAYS_NOM} (${PAYS_TYPE}) démarré`);
+  console.log('🇲🇱 ═══════════════════════════════════════════════════════════');
+  console.log(`🇲🇱 Serveur ${PAYS_NOM} (${PAYS_ROLE}) démarré`);
   console.log(`🌍 URL: http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
   console.log(`📊 Dashboard: http://localhost:${PORT}`);
   console.log(`🔍 Health: http://localhost:${PORT}/api/health`);
-  console.log(`🔗 Kit URL: https://kit-interconnexion-uemoa-v4320.m3jzw3-1.deu-c1.cloudhub.io`);
+  console.log(`🔗 Kit MuleSoft: http://localhost:8080/api/v1`);
   console.log(`⏹️  Arrêt: Ctrl+C`);
-  console.log('🏔️ ============================================================');
+  console.log('🇲🇱 ═══════════════════════════════════════════════════════════');
   console.log('');
-  console.log(`🏔️ Simulateur ${PAYS_NOM} - Système Douanier Hinterland`);
-  console.log('📋 Fonctionnalités disponibles:');
-  console.log('   • Réception automatique de manifestes depuis Kit MuleSoft');
-  console.log('   • Workflow automatique: Déclaration → Liquidation → Paiement');
-  console.log('   • Notification automatique vers Kit après paiement');
-  console.log('   • Interface web avec monitoring temps réel des workflows');
-  console.log('   • Tests de connectivité Kit d\'Interconnexion');
-  console.log(`   • Code pays: ${PAYS_CODE} | Type: ${PAYS_TYPE}`);
+  console.log(`🇲🇱 Simulateur ${PAYS_NOM} - Système Douanier ${PAYS_ROLE}`);
+  console.log('📋 Fonctionnalités disponibles conformes au rapport PDF UEMOA:');
+  console.log('');
+  console.log('   🔥 WORKFLOW LIBRE PRATIQUE (21 étapes) - ÉTAPES MALI 6-16:');
+  console.log('   • ÉTAPE 6: ✅ Réception et enregistrement manifeste depuis Kit MuleSoft');
+  console.log('   • ÉTAPE 7: 👤 Collecte documents pré-dédouanement (GUCE Mali)');
+  console.log('   • ÉTAPE 8: 👤 Établissement déclaration par déclarant malien');
+  console.log('   • ÉTAPES 9-10: 👤 Contrôles de recevabilité + Calcul du devis');
+  console.log('   • ÉTAPE 11: 👤 Enregistrement déclaration détaillée');
+  console.log('   • ÉTAPES 12-13: 👤 Contrôles douaniers + Émission bulletin liquidation');
+  console.log('   • ÉTAPE 14: 👤 Paiement droits et taxes (BCEAO/Trésor Mali)');
+  console.log('   • ÉTAPES 15-16: 👤 Transmission données vers Kit MuleSoft');
+  console.log('');
+  console.log('   🚛 WORKFLOW TRANSIT (16 étapes) - ÉTAPES MALI:');
+  console.log('   • ÉTAPE 11: Réception déclaration transit');
+  console.log('   • ÉTAPE 13: Arrivée marchandises au bureau Mali');
+  console.log('   • ÉTAPE 14: Message arrivée vers Kit MuleSoft');
+  console.log('');
+  console.log('   🔧 CARACTÉRISTIQUES TECHNIQUES:');
+  console.log('   • Interface web spécialisée pays de destination');
+  console.log('   • Workflow MANUEL selon rapport PDF UEMOA');
+  console.log('   • Réception automatique via Kit MuleSoft (étape 6)');
+  console.log('   • Traitement manuel étapes 7-16 par agents/déclarants maliens');
+  console.log('');
+  console.log(`   📍 LOCALISATION: ${VILLE_NAME} | Code: ${PAYS_CODE} | Type: ${PAYS_TYPE}`);
+  console.log('   🎯 SOURCE: Sénégal (Port de Dakar) via Kit MuleSoft');
+  console.log('   🔄 RETOUR: Informations déclaration/recouvrement vers Sénégal (étape 17)');
+  console.log('');
+  console.log('   📋 WORKFLOW MANUEL MALI (selon Figure 19 rapport PDF):');
+  console.log('   ✅ Réception manifeste → Collecte GUCE → Déclaration → Contrôles → Liquidation → Paiement → Transmission Kit');
+  console.log('   ⏳ PROCHAINES CORRECTIONS: Commission UEMOA (étapes 20-21)');
   console.log('');
 });
 
-// Gestion propre de l'arrêt
+// ✅ Gestion propre de l'arrêt
 process.on('SIGINT', () => {
-  console.log(`\n🛑 Arrêt du serveur ${PAYS_NOM}...`);
+  console.log(`\n🛑 Arrêt du serveur ${PAYS_NOM} (${VILLE_NAME})...`);
   server.close(() => {
-    console.log('✅ Serveur arrêté proprement');
+    console.log(`✅ Serveur ${PAYS_NOM} arrêté proprement`);
     process.exit(0);
   });
 });
 
 process.on('SIGTERM', () => {
-  console.log(`\n🛑 Arrêt du serveur ${PAYS_NOM}...`);
+  console.log(`\n🛑 Arrêt du serveur ${PAYS_NOM} (${VILLE_NAME})...`);
   server.close(() => {
-    console.log('✅ Serveur arrêté proprement');
+    console.log(`✅ Serveur ${PAYS_NOM} arrêté proprement`);
     process.exit(0);
   });
 });
 
-// Gestion des erreurs non capturées
+// ✅ Gestion des erreurs non capturées
 process.on('uncaughtException', (error) => {
   console.error(`❌ [${PAYS_CODE}] Erreur non capturée:`, error);
 });
