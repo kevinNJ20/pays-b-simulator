@@ -1,3 +1,8 @@
+// ============================================================================
+// MALI - API Réception Manifeste ÉTAPE 6 CORRIGÉE
+// Fichier: api/manifeste/reception.js - Pure réception depuis Kit MuleSoft
+// ============================================================================
+
 const database = require('../../lib/database');
 
 module.exports = async (req, res) => {
@@ -13,46 +18,56 @@ module.exports = async (req, res) => {
 
   try {
     if (req.method === 'POST') {
-      console.log('📨 [Pays B] Réception manifeste depuis Kit MuleSoft:', {
+      // ✅ ÉTAPE 6 : Réception manifeste depuis Kit MuleSoft (Sénégal)
+      console.log('📨 [MALI] ÉTAPE 6 : Réception manifeste depuis Kit MuleSoft');
+      console.log('📋 [MALI] Headers:', {
         source: req.headers['x-source-system'],
         pays: req.headers['x-source-country'],
         correlationId: req.headers['x-correlation-id'],
-        format: req.headers['x-manifeste-format'],
-        bodyKeys: Object.keys(req.body || {})
+        format: req.headers['x-manifeste-format']
       });
+      console.log('📋 [MALI] Données:', JSON.stringify(req.body, null, 2));
       
-      // ✅ CORRECTION: Détecter et transformer le format UEMOA
-      let manifesteFormate;
+      // Validation origine Sénégal via Kit
+      if (req.headers['x-source-country'] !== 'SEN') {
+        return res.status(400).json({
+          status: 'ERROR',
+          message: 'Mali ne peut recevoir des manifestes que du Sénégal',
+          paysAttendu: 'SEN',
+          paysRecu: req.headers['x-source-country'],
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      // Détecter format manifeste
       const formatDetecte = detecterFormatManifeste(req.body);
+      console.log(`🔍 [MALI] Format détecté: ${formatDetecte}`);
       
-      console.log(`🔍 [Pays B] Format détecté: ${formatDetecte}`);
-      
+      let manifesteFormate;
       if (formatDetecte === 'UEMOA') {
-        // Transformer le format UEMOA vers le format Pays B
         manifesteFormate = transformerFormatUEMOA(req.body);
-        console.log('🔄 [Pays B] Transformation UEMOA → Pays B effectuée');
+        console.log('🔄 [MALI] Transformation UEMOA → Format Mali effectuée');
       } else if (formatDetecte === 'PAYS_B') {
-        // Format déjà correct
         manifesteFormate = req.body;
-        console.log('✅ [Pays B] Format Pays B natif détecté');
+        console.log('✅ [MALI] Format Mali natif détecté');
       } else {
         throw new Error(`Format de manifeste non reconnu: ${formatDetecte}`);
       }
       
-      // Validation du manifeste transformé
+      // Validation du manifeste
       const erreurs = validerManifesteFormate(manifesteFormate);
       if (erreurs.length > 0) {
-        console.log('❌ [Pays B] Manifeste invalide après transformation:', erreurs);
+        console.log('❌ [MALI] Manifeste invalide:', erreurs);
         return res.status(400).json({
           status: 'ERROR',
-          message: 'Données manifeste invalides après transformation',
+          message: 'Données manifeste invalides pour traitement Mali',
           erreurs,
           formatDetecte,
           timestamp: new Date().toISOString()
         });
       }
 
-      // Enregistrer le manifeste et démarrer le workflow automatique
+      // ✅ ÉTAPE 6 : Enregistrer le manifeste au Mali
       const manifesteRecu = database.recevoirManifesteDepuisKit({
         ...manifesteFormate,
         formatOrigine: formatDetecte,
@@ -64,59 +79,74 @@ module.exports = async (req, res) => {
         }
       });
 
-      console.log(`✅ [Pays B] Manifeste ${formatDetecte} reçu et workflow démarré: ${manifesteRecu.id}`);
-      console.log(`🔄 [Pays B] Traitement automatique en cours...`);
+      console.log(`✅ [MALI] ÉTAPE 6 TERMINÉE: Manifeste ${manifesteRecu.id} reçu et enregistré`);
+      console.log(`🎯 [MALI] ➤ PROCHAINE ÉTAPE: Collecte documents GUCE Mali (ÉTAPE 7)`);
 
-      // ✅ CORRECTION: Réponse adaptée avec info sur le format
+      // ✅ Réponse ÉTAPE 6 - Pas de workflow automatique
       const reponse = {
         status: 'RECEIVED',
-        message: `Manifeste ${formatDetecte} reçu du Kit MuleSoft, traitement automatique démarré`,
+        message: '✅ ÉTAPE 6 MALI TERMINÉE - Manifeste reçu depuis Sénégal, attente traitement manuel',
         
+        // Informations pays Mali
+        paysTraitement: {
+          code: 'MLI',
+          nom: 'Mali',
+          ville: 'Bamako',
+          role: 'PAYS_DESTINATION'
+        },
+        
+        // Informations manifeste reçu
         manifeste: {
           id: manifesteRecu.id,
           numeroOrigine: manifesteRecu.manifeste?.numeroOrigine,
           transporteur: manifesteRecu.manifeste?.transporteur,
           nombreMarchandises: manifesteRecu.marchandises?.length || 0,
           dateReception: manifesteRecu.dateReception,
-          formatOrigine: formatDetecte
+          formatOrigine: formatDetecte,
+          paysOrigine: manifesteRecu.paysOrigine,
+          bureauDestination: manifesteRecu.bureauDestination
         },
         
-        traitement: {
-          mode: 'AUTOMATIQUE',
-          formatSupporte: formatDetecte,
-          etapesPlannifiees: [
-            { etape: 'DECLARATION', delai: '2 secondes', statut: 'PLANIFIEE' },
-            { etape: 'LIQUIDATION', delai: '5 secondes', statut: 'PLANIFIEE' },
-            { etape: 'PAIEMENT', delai: '10 secondes', statut: 'PLANIFIEE' },
-            { etape: 'NOTIFICATION_KIT', delai: '11 secondes', statut: 'PLANIFIEE' }
-          ],
-          estimationComplete: '~15 secondes'
-        },
-        
-        pays: {
-          code: 'BFA',
-          nom: 'Burkina Faso',
-          typeTraitement: 'HINTERLAND_AUTOMATIQUE'
-        },
-        
+        // Workflow Mali - MANUEL uniquement
         workflow: {
-          id: manifesteRecu.id,
-          statut: 'DEMARRE',
-          etapeActuelle: 'DECLARATION'
+          etapeTerminee: 6,
+          etapeDescription: 'Réception et enregistrement manifeste depuis Sénégal',
+          prochaine_etape: '7: Collecte documents pré-dédouanement GUCE Mali',
+          modeTraitement: 'MANUEL',
+          estimationDuree: 'Dépend du déclarant malien',
+          etapesRestantes: '7-16 (10 étapes à traiter manuellement)'
         },
         
-        // ✅ NOUVEAU: Informations sur la transformation de format
+        // Instructions spécifiques Mali
+        instructions: [
+          '✅ ÉTAPE 6 terminée - Manifeste reçu et enregistré au Mali',
+          '👤 ÉTAPE 7: Un opérateur malien doit collecter les documents via GUCE Mali',
+          '📋 ÉTAPE 8: Le déclarant malien doit créer la déclaration en détail',
+          '🔍 ÉTAPES 9-10: Contrôles de recevabilité + Calcul devis par douanes Mali',
+          '📝 ÉTAPE 11: Enregistrement déclaration détaillée par agent Mali',
+          '🛃 ÉTAPES 12-13: Contrôles douaniers + Émission bulletin liquidation',
+          '💳 ÉTAPE 14: Paiement droits et taxes (BCEAO/Trésor Mali)',
+          '📤 ÉTAPES 15-16: Transmission autorisation mainlevée vers Sénégal via Kit'
+        ],
+        
+        // Informations transformation format
         transformation: {
           formatEntree: formatDetecte,
-          formatInterne: 'PAYS_B',
+          formatInterne: 'MALI_NATIVE',
           champsTransformes: formatDetecte === 'UEMOA' ? [
             'manifeste.numero_origine → manifeste.numeroOrigine',
             'manifeste.consignataire → manifeste.transporteur',
             'articles → marchandises',
-            'articles[].description → marchandises[].description',
-            'articles[].destinataire → marchandises[].importateur',
-            'articles[].poids_brut → marchandises[].poidsBrut'
-          ] : ['Aucune transformation requise']
+            'Adaptation codes pays et bureaux Mali'
+          ] : ['Aucune transformation requise - Format Mali natif']
+        },
+        
+        // Références workflow selon rapport PDF
+        references: {
+          rapportPDF: 'Figure 19 - Architecture fonctionnelle interconnexion',
+          etapesTotal: 21,
+          etapesMali: '6-16',
+          prochainRetourSenegal: 'ÉTAPE 17: Réception informations déclaration/recouvrement'
         },
         
         timestamp: new Date().toISOString(),
@@ -125,64 +155,84 @@ module.exports = async (req, res) => {
 
       res.status(200).json(reponse);
       
-      // Log pour monitoring
-      console.log(`📊 [Pays B] Workflow automatique initié pour manifeste ${formatDetecte} ${manifesteRecu.manifeste?.numeroOrigine}`);
-      
     } else if (req.method === 'GET') {
-      // Lister les manifestes reçus (pour le dashboard)
+      // ✅ Lister les manifestes reçus au Mali
       const limite = parseInt(req.query.limite) || 10;
       const manifestes = database.obtenirManifestesRecus(limite);
       
       res.status(200).json({
         status: 'SUCCESS',
-        message: `Liste de ${manifestes.length} manifeste(s) reçu(s)`,
+        message: `Liste des manifestes reçus au Mali (Bamako)`,
+        
+        paysTraitement: {
+          code: 'MLI',
+          nom: 'Mali',
+          ville: 'Bamako',
+          role: 'PAYS_DESTINATION'
+        },
+        
         manifestes: manifestes.map(manifeste => ({
           id: manifeste.id,
           numeroOrigine: manifeste.manifeste?.numeroOrigine,
           transporteur: manifeste.manifeste?.transporteur,
-          portOrigine: manifeste.manifeste?.portOrigine,
-          dateArrivee: manifeste.manifeste?.dateArrivee,
           paysOrigine: manifeste.paysOrigine,
           nombreMarchandises: manifeste.marchandises?.length || 0,
           dateReception: manifeste.dateReception,
           statut: manifeste.statut,
-          sourceKit: manifeste.sourceKit,
-          formatOrigine: manifeste.formatOrigine || 'INCONNU'
+          etapeWorkflow: manifeste.etapeWorkflow,
+          formatOrigine: manifeste.formatOrigine || 'INCONNU',
+          etapeSuivante: manifeste.etapeSuivante
         })),
+        
         pagination: {
           limite,
           retournes: manifestes.length
         },
+        
+        workflow: {
+          etapeActuelle: 6,
+          description: 'Réception manifestes depuis Sénégal',
+          prochainEtape: 'ÉTAPES 7-16: Traitement manuel par équipes Mali'
+        },
+        
         timestamp: new Date().toISOString()
       });
       
     } else {
       res.status(405).json({ 
-        erreur: 'Méthode non autorisée',
-        methodesAutorisees: ['GET', 'POST', 'OPTIONS']
+        status: 'ERROR',
+        message: 'Méthode non autorisée',
+        methodesAutorisees: ['GET', 'POST', 'OPTIONS'],
+        paysTraitement: 'Mali - Bamako'
       });
     }
     
   } catch (error) {
-    console.error('❌ [Pays B] Erreur API réception manifeste:', error);
+    console.error('❌ [MALI] Erreur API réception manifeste:', error);
     
     res.status(500).json({
       status: 'ERROR',
-      message: 'Erreur lors du traitement du manifeste Kit MuleSoft',
+      message: 'Erreur lors du traitement du manifeste au Mali',
       erreur: error.message,
+      paysTraitement: {
+        code: 'MLI',
+        nom: 'Mali',
+        ville: 'Bamako'
+      },
       timestamp: new Date().toISOString(),
       correlationId: req.headers['x-correlation-id']
     });
   }
 };
 
-// ✅ NOUVELLE FONCTION: Détecter le format du manifeste
+// ✅ Fonctions utilitaires Mali
+
 function detecterFormatManifeste(donnees) {
   if (!donnees || typeof donnees !== 'object') {
     return 'INVALIDE';
   }
 
-  // Format UEMOA du Kit MuleSoft
+  // Format UEMOA du Kit MuleSoft (depuis Sénégal)
   if (donnees.manifeste && donnees.articles && Array.isArray(donnees.articles)) {
     if (donnees.manifeste.numero_origine !== undefined || 
         donnees.manifeste.format === 'UEMOA' ||
@@ -191,7 +241,7 @@ function detecterFormatManifeste(donnees) {
     }
   }
 
-  // Format Pays B natif
+  // Format Mali natif
   if (donnees.manifeste && donnees.marchandises && Array.isArray(donnees.marchandises)) {
     if (donnees.manifeste.numeroOrigine !== undefined ||
         donnees.marchandises.some(marc => marc.importateur !== undefined)) {
@@ -202,31 +252,29 @@ function detecterFormatManifeste(donnees) {
   return 'INCONNU';
 }
 
-// ✅ NOUVELLE FONCTION: Transformer format UEMOA vers format Pays B
 function transformerFormatUEMOA(donneesUEMOA) {
   const manifesteUEMOA = donneesUEMOA.manifeste;
   const articlesUEMOA = donneesUEMOA.articles;
 
   return {
     manifeste: {
-      // Transformations clés manifeste
+      // Transformations pour Mali
       numeroOrigine: manifesteUEMOA.numero_origine,
       transporteur: manifesteUEMOA.consignataire || manifesteUEMOA.transporteur,
       navire: manifesteUEMOA.navire,
       portOrigine: manifesteUEMOA.provenance,
-      portDestination: manifesteUEMOA.port_destination || 'OUAGADOUGOU',
+      portDestination: 'Bamako',
       dateArrivee: manifesteUEMOA.date_arrivee,
-      paysOrigine: manifesteUEMOA.paysOrigine || 'CIV',
+      paysOrigine: 'SEN',
       
-      // Champs spécifiques UEMOA préservés
-      format: 'UEMOA',
+      // Informations Mali spécifiques
+      format: 'UEMOA_TO_MALI',
       anneeManifeste: manifesteUEMOA.annee_manifeste,
       bureauOrigine: manifesteUEMOA.bureau_origine,
-      codeCGT: manifesteUEMOA.code_cgt,
-      pavillon: manifesteUEMOA.pavillon
+      bureauDestination: 'BAMAKO_DOUANES'
     },
     
-    // Transformation articles → marchandises
+    // Transformation articles → marchandises Mali
     marchandises: articlesUEMOA.map((article, index) => ({
       position: article.position || index + 1,
       
@@ -241,96 +289,54 @@ function transformerFormatUEMOA(donneesUEMOA) {
       nombreColis: article.nombre_colis || article.nbre_colis,
       quantite: article.quantite || article.nombre_colis || 1,
       
-      // Parties concernées
+      // Parties concernées - Mali
       importateur: article.destinataire,
       destinataire: article.destinataire,
       expediteur: article.expediteur,
       
-      // Informations transport
-      connaissement: article.connaissement,
-      marque: article.marque,
-      modeConditionnement: article.mode_conditionnement || article.mode_cond,
+      // Informations Mali
+      villeDestination: 'Bamako',
+      bureauDestination: 'BAMAKO_DOUANES',
       
-      // Informations destination
-      villeDestination: article.ville_destination || article.ville_dest,
-      voieDestination: article.voie_destination || article.voie_dest,
-      ordre: article.ordre,
-      
-      // Dates
-      dateEmbarquement: article.date_embarquement || article.date_emb,
-      lieuEmbarquement: article.lieu_embarquement || article.lieu_emb,
-      
-      // Conteneurs
-      conteneurs: article.conteneurs?.map(conteneur => ({
-        numero: conteneur.numero || conteneur.conteneur,
-        type: conteneur.type,
-        taille: conteneur.taille,
-        plomb: conteneur.plomb
-      })) || [],
-      nombreConteneurs: article.nombre_conteneurs || article.nbre_conteneur || 0,
-      
-      // Valeur estimée (calculée si pas présente)
+      // Valeur estimée
       valeurEstimee: article.valeur_estimee || 
-                     ((article.poids_brut || article.poids || 1000) * 200),
-      
-      // Champs UEMOA spécifiques
-      numeroArticle: article.numero_article,
-      precision1: article.precision_1,
-      precision2: article.precision_2
+                     ((article.poids_brut || article.poids || 1000) * 200)
     }))
   };
 }
 
-// ✅ NOUVELLE FONCTION: Validation du manifeste formaté
 function validerManifesteFormate(donnees) {
   const erreurs = [];
 
-  // Vérification structure générale
   if (!donnees || typeof donnees !== 'object') {
-    erreurs.push('Données manifeste manquantes ou invalides');
+    erreurs.push('Données manifeste manquantes pour Mali');
     return erreurs;
   }
 
-  // Vérification section manifeste
-  if (!donnees.manifeste || typeof donnees.manifeste !== 'object') {
+  // Validation section manifeste
+  if (!donnees.manifeste) {
     erreurs.push('Section manifeste manquante');
   } else {
     const manifeste = donnees.manifeste;
     
-    if (!manifeste.numeroOrigine || manifeste.numeroOrigine.toString().trim() === '') {
-      erreurs.push('Numéro de manifeste origine requis');
+    if (!manifeste.numeroOrigine) {
+      erreurs.push('Numéro de manifeste origine requis pour Mali');
     }
     
-    if (!manifeste.transporteur || manifeste.transporteur.trim() === '') {
-      erreurs.push('Transporteur requis');
+    if (!manifeste.transporteur) {
+      erreurs.push('Transporteur requis pour traitement Mali');
     }
     
-    if (!manifeste.paysOrigine || manifeste.paysOrigine.trim() === '') {
-      erreurs.push('Pays d\'origine requis');
+    if (!manifeste.paysOrigine || manifeste.paysOrigine !== 'SEN') {
+      erreurs.push('Pays origine doit être SEN (Sénégal) pour Mali');
     }
   }
 
-  // Vérification section marchandises
+  // Validation marchandises
   if (!donnees.marchandises || !Array.isArray(donnees.marchandises)) {
-    erreurs.push('Section marchandises manquante ou invalide');
+    erreurs.push('Section marchandises manquante pour Mali');
   } else if (donnees.marchandises.length === 0) {
-    erreurs.push('Au moins une marchandise est requise');
-  } else {
-    donnees.marchandises.forEach((marchandise, index) => {
-      if (!marchandise.description && !marchandise.designation) {
-        erreurs.push(`Description manquante pour la marchandise ${index + 1}`);
-      }
-      
-      if (!marchandise.importateur && !marchandise.destinataire) {
-        erreurs.push(`Importateur/destinataire manquant pour la marchandise ${index + 1}`);
-      }
-      
-      // Validation poids/quantité
-      const poids = marchandise.poidsNet || marchandise.poidsBrut || 0;
-      if (poids <= 0) {
-        erreurs.push(`Poids invalide pour la marchandise ${index + 1}`);
-      }
-    });
+    erreurs.push('Au moins une marchandise requise pour traitement Mali');
   }
 
   return erreurs;
