@@ -31,12 +31,27 @@
             text-align: center;
             margin-bottom: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        /* Logo drapeau Mali */
+        .mali-flag {
+            width: 80px;
+            height: 60px;
+            margin: 0 auto 15px;
+            border: 2px solid #2c3e50;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         .header h1 {
             color: #2c3e50;
             margin-bottom: 10px;
             font-size: 2.5em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
         }
 
         .header p {
@@ -448,6 +463,13 @@
             
             .header h1 {
                 font-size: 2em;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .mali-flag {
+                width: 60px;
+                height: 45px;
             }
 
             .status-grid {
@@ -459,7 +481,19 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>🇲🇱 Système Douanier Mali (Pays B)</h1>
+            <!-- Drapeau du Mali en SVG -->
+            <svg class="mali-flag" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
+                <!-- Bande verte (gauche) -->
+                <rect width="300" height="600" fill="#14b53a"/>
+                <!-- Bande jaune (centre) -->
+                <rect x="300" width="300" height="600" fill="#fcd116"/>
+                <!-- Bande rouge (droite) -->
+                <rect x="600" width="300" height="600" fill="#ce1126"/>
+            </svg>
+            
+            <h1>
+                <span>Système Douanier Mali (Pays B)</span>
+            </h1>
             <p>🏛️ Bamako - Pays de Destination - Workflow Manuel</p>
             <div class="workflow-badge">ÉTAPES 6-16 : Traitement Manuel</div>
         </header>
@@ -486,7 +520,7 @@
                     <div class="status-indicator active" id="reception-indicator"></div>
                     <span id="reception-status">Attente manifestes Sénégal</span>
                 </div>
-                <small id="reception-details">Via Kit MuleSoft depuis Port de Dakar</small>
+                <small id="reception-details">Via Kit d'interconnexion depuis Port de Dakar</small>
             </div>
             
             <div class="status-card">
@@ -593,7 +627,7 @@
                         <div class="step-number-mali manual">15-16</div>
                         <div class="step-content-mali">
                             <h4>📤 Transmission</h4>
-                            <p>Vers Kit MuleSoft</p>
+                            <p>Vers Kit d'interconnexion</p>
                             <div class="step-status-mali manual">Manuel</div>
                         </div>
                     </div>
@@ -707,7 +741,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Source-Country': 'SEN',
-                        'X-Source-System': 'KIT_MULESOFT'
+                        'X-Source-System': 'KIT_INTERCONNEXION'
                     },
                     body: JSON.stringify({
                         manifeste: {
@@ -759,7 +793,7 @@
                     <li><strong>ÉTAPE 11:</strong> 👤 Enregistrement déclaration détaillée</li>
                     <li><strong>ÉTAPES 12-13:</strong> 👤 Contrôles douaniers + Bulletin liquidation</li>
                     <li><strong>ÉTAPE 14:</strong> 👤 Paiement droits et taxes (BCEAO/Trésor Mali)</li>
-                    <li><strong>ÉTAPES 15-16:</strong> 👤 Transmission autorisation vers Kit MuleSoft</li>
+                    <li><strong>ÉTAPES 15-16:</strong> 👤 Transmission autorisation vers Kit d'interconnexion</li>
                 </ul>
                 
                 <p><strong>⏳ Durée estimée:</strong> Dépend du déclarant malien et des contrôles</p>
