@@ -1,5 +1,5 @@
 // ============================================================================
-// SERVEUR LOCAL MALI - server.js CORRIGÉ
+// SERVEUR LOCAL MALI - server.js CORRIGÉ AVEC ROUTE WORKFLOW MANUEL
 // Bamako - Pays de destination (Pays B selon rapport PDF UEMOA)
 // Compatible avec les APIs écrites pour Vercel - ÉTAPES 6-16 Manuel
 // ============================================================================
@@ -54,6 +54,9 @@ const apiRouter = {
   
   // ✅ ÉTAPES 15-16 : Transmission vers Kit MuleSoft
   'POST /api/apurement/notification': () => require('./api/apurement/notification'),
+  
+  // ✅ NOUVEAU: Workflow manuel Mali (Étapes 7-16)
+  'POST /api/workflow/manuel': () => require('./api/workflow/manuel'),
   
   // ✅ Tests Kit MuleSoft
   'GET /api/kit/test': () => require('./api/kit/test'),
@@ -123,7 +126,7 @@ const server = http.createServer(async (req, res) => {
   // ✅ CORS headers pour interconnexion UEMOA
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Source-Country, X-Source-System, X-Correlation-ID, X-Manifeste-Format, X-Payment-Reference');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Source-Country, X-Source-System, X-Correlation-ID, X-Manifeste-Format, X-Payment-Reference, X-Test-Mode');
 
   if (method === 'OPTIONS') {
     res.writeHead(200);
@@ -308,6 +311,7 @@ server.listen(PORT, HOST, () => {
   console.log('   • Workflow MANUEL selon rapport PDF UEMOA');
   console.log('   • Réception automatique via Kit MuleSoft (étape 6)');
   console.log('   • Traitement manuel étapes 7-16 par agents/déclarants maliens');
+  console.log('   • ✨ NOUVEAU: API /api/workflow/manuel pour exécution étapes');
   console.log('');
   console.log(`   📍 LOCALISATION: ${VILLE_NAME} | Code: ${PAYS_CODE} | Type: ${PAYS_TYPE}`);
   console.log('   🎯 SOURCE: Sénégal (Port de Dakar) via Kit MuleSoft');
@@ -315,7 +319,6 @@ server.listen(PORT, HOST, () => {
   console.log('');
   console.log('   📋 WORKFLOW MANUEL MALI (selon Figure 19 rapport PDF):');
   console.log('   ✅ Réception manifeste → Collecte GUCE → Déclaration → Contrôles → Liquidation → Paiement → Transmission Kit');
-  console.log('   ⏳ PROCHAINES CORRECTIONS: Commission UEMOA (étapes 20-21)');
   console.log('');
 });
 

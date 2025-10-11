@@ -395,6 +395,11 @@
             border-left-color: #667eea;
         }
 
+        .log-entry-mali.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
         /* Notification Mali */
         .notification-mali {
             position: fixed;
@@ -428,6 +433,11 @@
 
         .notification-mali.manuel {
             background: linear-gradient(135deg, #fcd116, #ff8c00);
+            color: #2c3e50;
+        }
+
+        .notification-mali.warning {
+            background: linear-gradient(135deg, #ffc107, #ff9800);
             color: #2c3e50;
         }
 
@@ -643,6 +653,70 @@
                 </div>
             </section>
 
+            <!-- NOUVEAU: Section Workflow Manuel Interactif -->
+            <section class="card full-width">
+                <h2>🎮 Workflow Manuel Interactif - Simuler les Étapes Mali</h2>
+                <p>Simulez chaque étape du workflow manuel Mali (étapes 7-16) ou exécutez le workflow complet automatiquement</p>
+                
+                <div id="workflow-interactif" style="margin: 20px 0;">
+                    <!-- Sélection du manifeste -->
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <label for="select-manifeste-mali"><strong>📦 Sélectionner un manifeste reçu :</strong></label>
+                        <select id="select-manifeste-mali" style="width: 100%; padding: 10px; margin-top: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                            <option value="">-- Chargement des manifestes... --</option>
+                        </select>
+                        <button class="btn btn-mali" onclick="chargerManifestesDisponibles()" style="margin-top: 10px;">
+                            🔄 Actualiser Liste
+                        </button>
+                    </div>
+
+                    <!-- Boutons étapes manuelles -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
+                        <button class="btn btn-manuel" onclick="executerEtape('collecter_documents_guce')" id="btn-etape-7">
+                            📋 ÉTAPE 7<br>Collecter Documents GUCE
+                        </button>
+                        
+                        <button class="btn btn-manuel" onclick="executerEtape('creer_declaration')" id="btn-etape-8">
+                            📝 ÉTAPE 8<br>Créer Déclaration
+                        </button>
+                        
+                        <button class="btn btn-manuel" onclick="executerEtape('controler_et_calculer_devis')" id="btn-etape-9-10">
+                            🔍 ÉTAPES 9-10<br>Contrôles + Devis
+                        </button>
+                        
+                        <button class="btn btn-manuel" onclick="executerEtape('enregistrer_declaration')" id="btn-etape-11">
+                            📋 ÉTAPE 11<br>Enregistrer Déclaration
+                        </button>
+                        
+                        <button class="btn btn-manuel" onclick="executerEtape('effectuer_controles_liquidation')" id="btn-etape-12-13">
+                            🛃 ÉTAPES 12-13<br>Contrôles + Liquidation
+                        </button>
+                        
+                        <button class="btn btn-manuel" onclick="executerEtape('effectuer_paiement')" id="btn-etape-14">
+                            💳 ÉTAPE 14<br>Effectuer Paiement
+                        </button>
+                        
+                        <button class="btn btn-mali" onclick="executerEtape('transmettre_vers_kit')" id="btn-etape-15-16">
+                            📤 ÉTAPES 15-16<br>Transmettre vers Kit
+                        </button>
+                    </div>
+
+                    <!-- Bouton workflow complet -->
+                    <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 2px solid #ddd;">
+                        <button class="btn btn-guce" onclick="executerWorkflowComplet()" id="btn-workflow-complet" style="font-size: 18px; padding: 20px 40px;">
+                            🚀 Exécuter Workflow Complet Automatique<br>
+                            <small style="font-size: 12px;">(Étapes 7 à 16 en une fois)</small>
+                        </button>
+                    </div>
+
+                    <!-- Zone de résultat -->
+                    <div id="resultat-etape-mali" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; display: none;">
+                        <h3>📊 Résultat de l'étape</h3>
+                        <pre id="resultat-etape-content" style="background: white; padding: 15px; border-radius: 5px; overflow-x: auto; max-height: 400px; overflow-y: auto;"></pre>
+                    </div>
+                </div>
+            </section>
+
             <!-- Manifestes reçus depuis Sénégal -->
             <section class="card">
                 <h2>📥 Manifestes Reçus (Sénégal → Mali)</h2>
@@ -709,6 +783,9 @@
             chargerDonneesMali();
             refreshIntervalMali = setInterval(chargerDonneesMali, 10000);
             
+            // Charger la liste des manifestes disponibles pour le workflow manuel
+            chargerManifestesDisponibles();
+            
             ajouterLogMali('workflow', 'Service démarré', 'Mali opérationnel - Workflow manuel étapes 6-16 activé');
         });
 
@@ -730,52 +807,290 @@
             }
         }
 
-        // Simuler réception manifeste test
+        // Simuler réception manifeste test - CORRIGÉ
         async function simulerReceptionManifesteTest() {
             ajouterLogMali('etape6', 'ÉTAPE 6', 'Test réception manifeste depuis Sénégal...');
             afficherNotificationMali('🧪 Simulation réception manifeste Mali...', 'info');
             
             try {
+                const manifesteTest = {
+                    manifeste: {
+                        numero_origine: `TEST_MLI_${Date.now()}`,
+                        transporteur: 'SIMULATION DAKAR-BAMAKO',
+                        navire: 'TEST VESSEL MALI',
+                        portOrigine: 'Port de Dakar',
+                        dateArrivee: new Date().toISOString().split('T')[0],
+                        paysOrigine: 'SEN',
+                        format: 'TEST'
+                    },
+                    marchandises: [{
+                        position: 1,
+                        designation: 'Test Mali - Véhicule Simulation',
+                        poidsNet: 1500,
+                        poidsBrut: 1600,
+                        quantite: 1,
+                        importateur: 'SIMULATION IMPORT BAMAKO',
+                        destinataire: 'SIMULATION IMPORT BAMAKO',
+                        valeurEstimee: 5000000
+                    }],
+                    isTest: true
+                };
+
+                console.log('📤 Envoi manifeste test Mali:', manifesteTest);
+
                 const response = await fetch(`${API_BASE_MALI}/manifeste/reception`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Source-Country': 'SEN',
-                        'X-Source-System': 'KIT_INTERCONNEXION'
+                        'X-Source-System': 'KIT_INTERCONNEXION',
+                        'X-Test-Mode': 'true',
+                        'X-Correlation-ID': `TEST_MLI_${Date.now()}`
+                    },
+                    body: JSON.stringify(manifesteTest)
+                });
+                
+                console.log('📥 Réponse Mali:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('✅ Données reçues:', data);
+                    
+                    afficherNotificationMali('✅ Manifeste test reçu au Mali avec succès', 'success');
+                    ajouterLogMali('etape6', 'ÉTAPE 6 TERMINÉE', `Manifeste ${data.manifeste?.id || 'TEST'} enregistré - Prochaine: Collecte GUCE (étape 7)`);
+                    
+                    // Stocker l'ID du manifeste pour les étapes suivantes
+                    window.dernierManifesteId = data.manifeste?.id;
+                    
+                    // Actualiser les données
+                    setTimeout(() => {
+                        chargerDonneesMali();
+                        chargerManifestesDisponibles();
+                    }, 1000);
+                } else {
+                    const errorData = await response.text();
+                    console.error('❌ Erreur réponse:', errorData);
+                    throw new Error(`HTTP ${response.status}: ${errorData}`);
+                }
+                
+            } catch (error) {
+                console.error('❌ Erreur simulation Mali:', error);
+                ajouterLogMali('error', 'ERREUR ÉTAPE 6', error.message);
+                afficherNotificationMali(`❌ Erreur simulation Mali: ${error.message}`, 'error');
+            }
+        }
+
+        // Charger les manifestes disponibles pour le workflow manuel
+        async function chargerManifestesDisponibles() {
+            try {
+                const response = await fetch(`${API_BASE_MALI}/manifeste/lister?limite=20`);
+                const data = await response.json();
+                
+                const select = document.getElementById('select-manifeste-mali');
+                
+                if (data.status === 'SUCCESS' && data.manifestes && data.manifestes.length > 0) {
+                    select.innerHTML = '<option value="">-- Sélectionner un manifeste --</option>';
+                    
+                    data.manifestes.forEach(manifeste => {
+                        const option = document.createElement('option');
+                        option.value = manifeste.id;
+                        option.textContent = `${manifeste.numeroOrigine || manifeste.id} - ${manifeste.transporteur || 'N/A'} (${manifeste.statut})`;
+                        select.appendChild(option);
+                    });
+                    
+                    afficherNotificationMali(`✅ ${data.manifestes.length} manifeste(s) chargé(s)`, 'success');
+                } else {
+                    select.innerHTML = '<option value="">-- Aucun manifeste disponible --</option>';
+                    afficherNotificationMali('⚠️ Aucun manifeste disponible', 'warning');
+                }
+                
+            } catch (error) {
+                console.error('Erreur chargement manifestes:', error);
+                afficherNotificationMali('❌ Erreur chargement manifestes', 'error');
+            }
+        }
+
+        // Exécuter une étape manuelle spécifique
+        async function executerEtape(action) {
+            const selectManifeste = document.getElementById('select-manifeste-mali');
+            const manifesteId = selectManifeste.value || window.dernierManifesteId;
+            
+            if (!manifesteId) {
+                afficherNotificationMali('⚠️ Veuillez d\'abord sélectionner un manifeste ou créer un test', 'warning');
+                return;
+            }
+            
+            const nomEtape = {
+                'collecter_documents_guce': 'ÉTAPE 7 - Collecte Documents GUCE',
+                'creer_declaration': 'ÉTAPE 8 - Création Déclaration',
+                'controler_et_calculer_devis': 'ÉTAPES 9-10 - Contrôles et Devis',
+                'enregistrer_declaration': 'ÉTAPE 11 - Enregistrement Déclaration',
+                'effectuer_controles_liquidation': 'ÉTAPES 12-13 - Contrôles et Liquidation',
+                'effectuer_paiement': 'ÉTAPE 14 - Paiement',
+                'transmettre_vers_kit': 'ÉTAPES 15-16 - Transmission Kit'
+            }[action] || action;
+            
+            ajouterLogMali('manuel', nomEtape, `Exécution pour manifeste ${manifesteId}...`);
+            afficherNotificationMali(`⚙️ ${nomEtape} en cours...`, 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_MALI}/workflow/manuel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Source-System': 'MALI_FRONTEND_MANUEL'
                     },
                     body: JSON.stringify({
-                        manifeste: {
-                            numero_origine: `TEST_${Date.now()}`,
-                            transporteur: 'SIMULATION DAKAR-BAMAKO',
-                            navire: 'TEST VESSEL',
-                            portOrigine: 'Port de Dakar',
-                            dateArrivee: new Date().toISOString().split('T')[0]
-                        },
-                        marchandises: [{
-                            position: 1,
-                            designation: 'Test Mali - Simulation',
-                            poidsNet: 1000,
-                            quantite: 1,
-                            importateur: 'SIMULATION IMPORT BAMAKO'
-                        }]
+                        action: action,
+                        manifesteId: manifesteId,
+                        donnees: {
+                            agentMalien: 'AGENT_MALI_SIMULATION',
+                            dateOperation: new Date().toISOString()
+                        }
                     })
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
-                    afficherNotificationMali('✅ Manifeste test reçu au Mali avec succès', 'success');
-                    ajouterLogMali('etape6', 'ÉTAPE 6 TERMINÉE', 'Manifeste test enregistré - Prochaine: Collecte GUCE (étape 7)');
+                    
+                    // Afficher le résultat
+                    const resultatDiv = document.getElementById('resultat-etape-mali');
+                    const resultatContent = document.getElementById('resultat-etape-content');
+                    resultatDiv.style.display = 'block';
+                    resultatContent.textContent = JSON.stringify(data, null, 2);
+                    
+                    afficherNotificationMali(`✅ ${nomEtape} terminée avec succès`, 'success');
+                    ajouterLogMali('manuel', nomEtape, `✅ Succès - Prochaine étape disponible`);
+                    
+                    // Marquer l'étape comme complétée dans l'interface
+                    marquerEtapeComplete(action);
                     
                     // Actualiser les données
                     setTimeout(() => chargerDonneesMali(), 1000);
                 } else {
-                    throw new Error('Erreur simulation Mali');
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Erreur étape');
                 }
                 
             } catch (error) {
-                console.error('Erreur simulation Mali:', error);
-                afficherNotificationMali('❌ Erreur simulation Mali', 'error');
+                console.error(`Erreur ${nomEtape}:`, error);
+                afficherNotificationMali(`❌ ${nomEtape} échouée: ${error.message}`, 'error');
+                ajouterLogMali('error', nomEtape, `❌ Erreur: ${error.message}`);
             }
+        }
+
+        // Exécuter le workflow complet automatiquement
+        async function executerWorkflowComplet() {
+            const selectManifeste = document.getElementById('select-manifeste-mali');
+            const manifesteId = selectManifeste.value || window.dernierManifesteId;
+            
+            if (!manifesteId) {
+                afficherNotificationMali('⚠️ Veuillez d\'abord sélectionner un manifeste ou créer un test', 'warning');
+                return;
+            }
+            
+            const btnWorkflow = document.getElementById('btn-workflow-complet');
+            btnWorkflow.disabled = true;
+            btnWorkflow.innerHTML = '⏳ Workflow en cours...<br><small>Veuillez patienter</small>';
+            
+            ajouterLogMali('workflow', 'Workflow Complet', `Démarrage workflow Mali complet pour ${manifesteId}`);
+            afficherNotificationMali('🚀 Démarrage workflow Mali complet (étapes 7-16)...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_MALI}/workflow/manuel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Source-System': 'MALI_FRONTEND_AUTO'
+                    },
+                    body: JSON.stringify({
+                        action: 'workflow_complet_auto',
+                        manifesteId: manifesteId,
+                        donnees: {
+                            agentMalien: 'AGENT_MALI_AUTO',
+                            modeExecution: 'AUTOMATIQUE'
+                        }
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Afficher le résultat complet
+                    const resultatDiv = document.getElementById('resultat-etape-mali');
+                    const resultatContent = document.getElementById('resultat-etape-content');
+                    resultatDiv.style.display = 'block';
+                    resultatContent.textContent = JSON.stringify(data, null, 2);
+                    
+                    if (data.status === 'WORKFLOW_COMPLET') {
+                        afficherNotificationMali('🎉 Workflow Mali complet terminé avec succès!', 'success');
+                        ajouterLogMali('workflow', 'Workflow Complet', `✅ Toutes les étapes (7-16) terminées`);
+                        
+                        // Marquer toutes les étapes comme complètes
+                        marquerToutesEtapesCompletes();
+                    } else {
+                        afficherNotificationMali(`⚠️ Workflow terminé avec erreurs`, 'warning');
+                        ajouterLogMali('workflow', 'Workflow Complet', `⚠️ Erreur: ${data.erreur}`);
+                    }
+                    
+                    // Actualiser les données
+                    setTimeout(() => chargerDonneesMali(), 1000);
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Erreur workflow');
+                }
+                
+            } catch (error) {
+                console.error('Erreur workflow complet:', error);
+                afficherNotificationMali(`❌ Workflow échoué: ${error.message}`, 'error');
+                ajouterLogMali('error', 'Workflow Complet', `❌ Erreur: ${error.message}`);
+            } finally {
+                btnWorkflow.disabled = false;
+                btnWorkflow.innerHTML = '🚀 Exécuter Workflow Complet Automatique<br><small style="font-size: 12px;">(Étapes 7 à 16 en une fois)</small>';
+            }
+        }
+
+        // Marquer une étape comme complétée dans l'interface
+        function marquerEtapeComplete(action) {
+            const mapping = {
+                'collecter_documents_guce': 'mali-step-7',
+                'creer_declaration': 'mali-step-8',
+                'controler_et_calculer_devis': 'mali-step-9-10',
+                'enregistrer_declaration': 'mali-step-11',
+                'effectuer_controles_liquidation': 'mali-step-12-13',
+                'effectuer_paiement': 'mali-step-14',
+                'transmettre_vers_kit': 'mali-step-15-16'
+            };
+            
+            const stepId = mapping[action];
+            if (stepId) {
+                const step = document.getElementById(stepId);
+                if (step) {
+                    step.className = 'workflow-step-mali completed';
+                    const stepNumber = step.querySelector('.step-number-mali');
+                    const stepStatus = step.querySelector('.step-status-mali');
+                    if (stepNumber) stepNumber.className = 'step-number-mali completed';
+                    if (stepStatus) {
+                        stepStatus.className = 'step-status-mali completed';
+                        stepStatus.textContent = 'Terminé';
+                    }
+                }
+            }
+        }
+
+        // Marquer toutes les étapes comme complètes
+        function marquerToutesEtapesCompletes() {
+            const etapes = [
+                'collecter_documents_guce',
+                'creer_declaration',
+                'controler_et_calculer_devis',
+                'enregistrer_declaration',
+                'effectuer_controles_liquidation',
+                'effectuer_paiement',
+                'transmettre_vers_kit'
+            ];
+            
+            etapes.forEach(etape => marquerEtapeComplete(etape));
         }
 
         // Ouvrir guide workflow Mali
