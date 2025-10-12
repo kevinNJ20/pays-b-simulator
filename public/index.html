@@ -34,7 +34,6 @@
             position: relative;
         }
 
-        /* Logo drapeau Mali */
         .mali-flag {
             width: 80px;
             height: 60px;
@@ -69,7 +68,6 @@
             margin-top: 10px;
         }
 
-        /* Styles pour les bannières et statuts */
         .mali-status-banner {
             padding: 15px;
             border-radius: 10px;
@@ -82,11 +80,6 @@
         .mali-status-banner.workflow-ready {
             background: linear-gradient(135deg, #14b53a 0%, #fcd116 100%);
             color: #2c3e50;
-        }
-
-        .mali-status-banner.waiting-manifeste {
-            background: linear-gradient(135deg, #fcd116 0%, #ce1126 100%);
-            color: white;
         }
 
         .status-grid {
@@ -129,20 +122,10 @@
             animation: pulse 2s infinite;
         }
 
-        .status-indicator.waiting {
-            background: #fcd116;
-            animation: blink 1s infinite;
-        }
-
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.7; }
             100% { opacity: 1; }
-        }
-
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.3; }
         }
 
         .main {
@@ -169,7 +152,6 @@
             font-size: 1.5em;
         }
 
-        /* Styles pour les boutons Mali */
         .btn {
             padding: 12px 24px;
             border: none;
@@ -211,7 +193,6 @@
             cursor: not-allowed;
         }
 
-        /* Styles pour le workflow Mali (Étapes 6-16) */
         .workflow-mali {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -278,30 +259,337 @@
             margin-bottom: 5px;
         }
 
-        .step-status-mali {
-            font-size: 0.8em;
-            font-weight: bold;
-            padding: 2px 6px;
+        /* ============================================ */
+        /* STYLES POUR LES MODALES INTERACTIVES */
+        /* ============================================ */
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9998;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-container {
+            background: white;
+            border-radius: 15px;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s;
+            position: relative;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #ce1126 0%, #14b53a 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+            position: relative;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .form-group label.required::after {
+            content: " *";
+            color: #ce1126;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
             border-radius: 8px;
-            display: inline-block;
+            font-size: 14px;
+            transition: all 0.3s;
         }
 
-        .step-status-mali.waiting {
-            background: #e9ecef;
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #14b53a;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(20, 181, 58, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-section h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #14b53a;
+            padding-bottom: 10px;
+        }
+
+        .article-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #ce1126;
+        }
+
+        .btn-add-article {
+            background: #14b53a;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .btn-add-article:hover {
+            background: #0f9647;
+        }
+
+        .btn-remove-article {
+            background: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            float: right;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #14b53a 0%, #0f9647 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(20, 181, 58, 0.3);
+        }
+
+        /* ============================================ */
+        /* STYLES POUR L'AFFICHAGE AMÉLIORÉ DES RÉSULTATS */
+        /* ============================================ */
+        
+        .result-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #14b53a;
+        }
+
+        .result-icon {
+            font-size: 48px;
+        }
+
+        .result-title {
+            flex: 1;
+        }
+
+        .result-title h3 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .result-title p {
             color: #6c757d;
+            font-size: 0.9em;
         }
 
-        .step-status-mali.manual {
-            background: #fff3cd;
-            color: #856404;
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
-        .step-status-mali.completed {
+        .result-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #14b53a;
+        }
+
+        .result-card h4 {
+            color: #2c3e50;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .result-value {
+            color: #495057;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .result-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .result-table th {
+            background: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .result-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .result-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .result-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .result-badge.success {
             background: #d4edda;
             color: #155724;
         }
 
-        /* Styles pour les données Mali */
+        .result-badge.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .result-badge.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        /* Autres styles existants... */
         .data-list {
             max-height: 300px;
             overflow-y: auto;
@@ -313,14 +601,6 @@
             margin: 10px 0;
             border-radius: 8px;
             border-left: 4px solid #ce1126;
-        }
-
-        .data-item-mali.from-senegal {
-            border-left-color: #14b53a;
-        }
-
-        .data-item-mali.processed {
-            border-left-color: #fcd116;
         }
 
         .item-header-mali {
@@ -337,30 +617,6 @@
             color: #6c757d;
         }
 
-        .item-status-mali {
-            font-size: 0.8em;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-weight: bold;
-            display: inline-block;
-        }
-
-        .item-status-mali.recu {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .item-status-mali.manuel {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .item-status-mali.complete {
-            background: #cce5ff;
-            color: #004085;
-        }
-
-        /* Styles pour le log Mali */
         .mali-log {
             max-height: 350px;
             overflow-y: auto;
@@ -379,28 +635,6 @@
             border-left: 3px solid #ce1126;
         }
 
-        .log-entry-mali.etape6 {
-            border-left-color: #14b53a;
-        }
-
-        .log-entry-mali.manuel {
-            border-left-color: #fcd116;
-        }
-
-        .log-entry-mali.workflow {
-            border-left-color: #17a2b8;
-        }
-
-        .log-entry-mali.kit {
-            border-left-color: #667eea;
-        }
-
-        .log-entry-mali.error {
-            border-left-color: #dc3545;
-            background: #f8d7da;
-        }
-
-        /* Notification Mali */
         .notification-mali {
             position: fixed;
             top: 20px;
@@ -431,41 +665,6 @@
             background: linear-gradient(135deg, #007bff, #6610f2);
         }
 
-        .notification-mali.manuel {
-            background: linear-gradient(135deg, #fcd116, #ff8c00);
-            color: #2c3e50;
-        }
-
-        .notification-mali.warning {
-            background: linear-gradient(135deg, #ffc107, #ff9800);
-            color: #2c3e50;
-        }
-
-        /* Indicateurs temps réel */
-        .real-time-indicator-mali {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: #14b53a;
-            border-radius: 50%;
-            animation: blink 1s infinite;
-            margin-left: 10px;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
         @media (max-width: 768px) {
             .workflow-mali {
                 grid-template-columns: 1fr;
@@ -477,12 +676,12 @@
                 gap: 10px;
             }
 
-            .mali-flag {
-                width: 60px;
-                height: 45px;
+            .modal-container {
+                width: 95%;
+                max-height: 95vh;
             }
 
-            .status-grid {
+            .form-row {
                 grid-template-columns: 1fr;
             }
         }
@@ -491,13 +690,9 @@
 <body>
     <div class="container">
         <header class="header">
-            <!-- Drapeau du Mali en SVG -->
             <svg class="mali-flag" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 600">
-                <!-- Bande verte (gauche) -->
                 <rect width="300" height="600" fill="#14b53a"/>
-                <!-- Bande jaune (centre) -->
                 <rect x="300" width="300" height="600" fill="#fcd116"/>
-                <!-- Bande rouge (droite) -->
                 <rect x="600" width="300" height="600" fill="#ce1126"/>
             </svg>
             
@@ -508,12 +703,10 @@
             <div class="workflow-badge">ÉTAPES 6-16 : Traitement Manuel</div>
         </header>
 
-        <!-- Bannière statut Mali -->
         <div class="mali-status-banner workflow-ready" id="mali-banner">
             ✅ Mali opérationnel - Traitement manuel des manifestes reçus depuis Sénégal
         </div>
 
-        <!-- Grille de statut Mali -->
         <div class="status-grid">
             <div class="status-card">
                 <h3>🇲🇱 Service Mali</h3>
@@ -549,7 +742,6 @@
             </div>
         </div>
 
-        <!-- Section Portail GUCE Mali -->
         <section class="card full-width">
             <h2>🌐 Accès aux Services Mali</h2>
             <p>Accédez aux différents portails et services pour la gestion douanière complète au Mali.</p>
@@ -564,9 +756,8 @@
         </section>
 
         <main class="main">
-            <!-- Workflow Mali manuel (Étapes 6-16) -->
             <section class="card full-width">
-                <h2>🇲🇱 Workflow Mali Manuel (Étapes 6-16) <span class="real-time-indicator-mali"></span></h2>
+                <h2>🇲🇱 Workflow Mali Manuel (Étapes 6-16)</h2>
                 <p>Traitement manuel conforme au rapport PDF UEMOA :</p>
                 
                 <div class="workflow-mali">
@@ -575,7 +766,6 @@
                         <div class="step-content-mali">
                             <h4>📥 Réception</h4>
                             <p>Manifeste depuis Kit</p>
-                            <div class="step-status-mali completed">Prêt</div>
                         </div>
                     </div>
                     
@@ -584,7 +774,6 @@
                         <div class="step-content-mali">
                             <h4>📋 Documents GUCE</h4>
                             <p>Collecte documents</p>
-                            <div class="step-status-mali manual">Manuel</div>
                         </div>
                     </div>
                     
@@ -593,7 +782,6 @@
                         <div class="step-content-mali">
                             <h4>📝 Déclaration</h4>
                             <p>Par déclarant malien</p>
-                            <div class="step-status-mali manual">Manuel</div>
                         </div>
                     </div>
                     
@@ -602,7 +790,6 @@
                         <div class="step-content-mali">
                             <h4>🔍 Contrôles</h4>
                             <p>Recevabilité + Devis</p>
-                            <div class="step-status-mali manual">Manuel</div>
                         </div>
                     </div>
                     
@@ -611,7 +798,6 @@
                         <div class="step-content-mali">
                             <h4>📋 Enregistrement</h4>
                             <p>Déclaration détaillée</p>
-                            <div class="step-status-mali manual">Manuel</div>
                         </div>
                     </div>
                     
@@ -620,7 +806,6 @@
                         <div class="step-content-mali">
                             <h4>🛃 Liquidation</h4>
                             <p>Contrôles + Bulletin</p>
-                            <div class="step-status-mali manual">Manuel</div>
                         </div>
                     </div>
                     
@@ -629,7 +814,6 @@
                         <div class="step-content-mali">
                             <h4>💳 Paiement</h4>
                             <p>Droits et taxes</p>
-                            <div class="step-status-mali manual">Manuel</div>
                         </div>
                     </div>
                     
@@ -637,14 +821,13 @@
                         <div class="step-number-mali manual">15-16</div>
                         <div class="step-content-mali">
                             <h4>📤 Transmission</h4>
-                            <p>Vers Kit d'interconnexion</p>
-                            <div class="step-status-mali manual">Manuel</div>
+                            <p>Vers Kit</p>
                         </div>
                     </div>
                 </div>
 
                 <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-manuel" onclick="ouvrirGuideWorkflowMali()" id="btn-guide-mali">
+                    <button class="btn btn-manuel" onclick="ouvrirGuideWorkflowMali()">
                         📚 Guide Workflow Mali (Étapes 6-16)
                     </button>
                     <button class="btn btn-mali" onclick="verifierStatutWorkflowMali()">
@@ -653,13 +836,11 @@
                 </div>
             </section>
 
-            <!-- NOUVEAU: Section Workflow Manuel Interactif -->
             <section class="card full-width">
                 <h2>🎮 Workflow Manuel Interactif - Simuler les Étapes Mali</h2>
                 <p>Simulez chaque étape du workflow manuel Mali (étapes 7-16) ou exécutez le workflow complet automatiquement</p>
                 
                 <div id="workflow-interactif" style="margin: 20px 0;">
-                    <!-- Sélection du manifeste -->
                     <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
                         <label for="select-manifeste-mali"><strong>📦 Sélectionner un manifeste reçu :</strong></label>
                         <select id="select-manifeste-mali" style="width: 100%; padding: 10px; margin-top: 10px; border-radius: 5px; border: 1px solid #ddd;">
@@ -670,29 +851,28 @@
                         </button>
                     </div>
 
-                    <!-- Boutons étapes manuelles -->
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0;">
-                        <button class="btn btn-manuel" onclick="executerEtape('collecter_documents_guce')" id="btn-etape-7">
+                        <button class="btn btn-manuel" onclick="ouvrirModalEtape7()" id="btn-etape-7">
                             📋 ÉTAPE 7<br>Collecter Documents GUCE
                         </button>
                         
-                        <button class="btn btn-manuel" onclick="executerEtape('creer_declaration')" id="btn-etape-8">
+                        <button class="btn btn-manuel" onclick="ouvrirModalEtape8()" id="btn-etape-8">
                             📝 ÉTAPE 8<br>Créer Déclaration
                         </button>
                         
-                        <button class="btn btn-manuel" onclick="executerEtape('controler_et_calculer_devis')" id="btn-etape-9-10">
+                        <button class="btn btn-manuel" onclick="ouvrirModalEtape910()" id="btn-etape-9-10">
                             🔍 ÉTAPES 9-10<br>Contrôles + Devis
                         </button>
                         
-                        <button class="btn btn-manuel" onclick="executerEtape('enregistrer_declaration')" id="btn-etape-11">
+                        <button class="btn btn-manuel" onclick="ouvrirModalEtape11()" id="btn-etape-11">
                             📋 ÉTAPE 11<br>Enregistrer Déclaration
                         </button>
                         
-                        <button class="btn btn-manuel" onclick="executerEtape('effectuer_controles_liquidation')" id="btn-etape-12-13">
+                        <button class="btn btn-manuel" onclick="ouvrirModalEtape1213()" id="btn-etape-12-13">
                             🛃 ÉTAPES 12-13<br>Contrôles + Liquidation
                         </button>
                         
-                        <button class="btn btn-manuel" onclick="executerEtape('effectuer_paiement')" id="btn-etape-14">
+                        <button class="btn btn-manuel" onclick="ouvrirModalEtape14()" id="btn-etape-14">
                             💳 ÉTAPE 14<br>Effectuer Paiement
                         </button>
                         
@@ -701,7 +881,6 @@
                         </button>
                     </div>
 
-                    <!-- Bouton workflow complet -->
                     <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 2px solid #ddd;">
                         <button class="btn btn-guce" onclick="executerWorkflowComplet()" id="btn-workflow-complet" style="font-size: 18px; padding: 20px 40px;">
                             🚀 Exécuter Workflow Complet Automatique<br>
@@ -709,15 +888,13 @@
                         </button>
                     </div>
 
-                    <!-- Zone de résultat -->
-                    <div id="resultat-etape-mali" style="margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 8px; display: none;">
-                        <h3>📊 Résultat de l'étape</h3>
-                        <pre id="resultat-etape-content" style="background: white; padding: 15px; border-radius: 5px; overflow-x: auto; max-height: 400px; overflow-y: auto;"></pre>
+                    <div id="resultat-etape-mali" style="margin-top: 20px; display: none;">
+                        <!-- Affichage amélioré des résultats -->
                     </div>
                 </div>
             </section>
 
-            <!-- Manifestes reçus depuis Sénégal -->
+            <!-- Suite du HTML... -->
             <section class="card">
                 <h2>📥 Manifestes Reçus (Sénégal → Mali)</h2>
                 <div class="data-list" id="manifestes-mali-list">
@@ -725,7 +902,6 @@
                 </div>
             </section>
 
-            <!-- Documents GUCE collectés -->
             <section class="card">
                 <h2>📋 Documents GUCE Mali</h2>
                 <div class="data-list" id="documents-guce-list">
@@ -733,7 +909,6 @@
                 </div>
             </section>
 
-            <!-- Déclarations créées par déclarants maliens -->
             <section class="card">
                 <h2>📝 Déclarations Mali</h2>
                 <div class="data-list" id="declarations-mali-list">
@@ -741,7 +916,6 @@
                 </div>
             </section>
 
-            <!-- Paiements effectués au Mali -->
             <section class="card">
                 <h2>💳 Paiements Mali (BCEAO)</h2>
                 <div class="data-list" id="paiements-mali-list">
@@ -749,9 +923,8 @@
                 </div>
             </section>
 
-            <!-- Log des activités Mali -->
             <section class="card full-width">
-                <h2>📊 Journal des Activités Mali <span class="real-time-indicator-mali"></span></h2>
+                <h2>📊 Journal des Activités Mali</h2>
                 <div class="mali-log" id="mali-log">
                     <div class="log-entry-mali workflow">
                         <strong>Système Mali initialisé</strong> - Workflow manuel étapes 6-16 prêt
@@ -762,587 +935,315 @@
         </main>
     </div>
 
+    <!-- ============================================ -->
+    <!-- MODALES INTERACTIVES POUR CHAQUE ÉTAPE -->
+    <!-- ============================================ -->
+
+    <!-- Modal Étape 7: Collecte Documents GUCE -->
+    <div id="modal-etape-7" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>📋 ÉTAPE 7 - Collecte Documents GUCE Mali</h3>
+                <button class="modal-close" onclick="fermerModal('modal-etape-7')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: #6c757d;">Collectez les documents pré-dédouanement via le portail GUCE Mali</p>
+                
+                <form id="form-etape-7">
+                    <div class="form-section">
+                        <h4>Documents Requis</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required">Connaissement</label>
+                                <input type="text" name="connaissement" placeholder="Ex: BL_2025_001" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required">Facture Commerciale</label>
+                                <input type="text" name="factureCommerciale" placeholder="Ex: FC_2025_001" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required">Déclaration Préalable</label>
+                                <input type="text" name="declarationPrealable" placeholder="Ex: DP_2025_001" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Documents Bancaires (séparés par virgule)</label>
+                                <input type="text" name="documentsBancaires" placeholder="Ex: DB1, DB2, DB3">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Informations Opérateur</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required">Opérateur Économique</label>
+                                <input type="text" name="operateurEconomique" value="OE_MALI_001" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required">Déclarant Malien</label>
+                                <input type="text" name="declarantMalien" value="DECLARANT_MALI_SARL" required>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="fermerModal('modal-etape-7')">Annuler</button>
+                <button class="btn-submit" onclick="soumettre Etape7()">✅ Valider Documents GUCE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Étape 8: Création Déclaration -->
+    <div id="modal-etape-8" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>📝 ÉTAPE 8 - Création Déclaration Douanière</h3>
+                <button class="modal-close" onclick="fermerModal('modal-etape-8')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 20px; color: #6c757d;">Créez une déclaration douanière complète pour le manifeste sélectionné</p>
+                
+                <form id="form-etape-8">
+                    <div class="form-section">
+                        <h4>Informations Déclarant</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required">Déclarant Malien</label>
+                                <input type="text" name="declarantMalien" value="DECLARANT_MALI_SARL" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required">Importateur Malien</label>
+                                <input type="text" name="importateurMalien" value="IMPORTATEUR_MALI_001" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Articles Déclarés</h4>
+                        <div id="articles-container">
+                            <!-- Les articles seront ajoutés dynamiquement -->
+                        </div>
+                        <button type="button" class="btn-add-article" onclick="ajouterArticle()">
+                            ➕ Ajouter un Article
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="fermerModal('modal-etape-8')">Annuler</button>
+                <button class="btn-submit" onclick="soumettreEtape8()">✅ Créer Déclaration</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Étapes 9-10: Contrôles et Devis -->
+    <div id="modal-etape-9-10" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>🔍 ÉTAPES 9-10 - Contrôles de Recevabilité et Calcul Devis</h3>
+                <button class="modal-close" onclick="fermerModal('modal-etape-9-10')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-etape-9-10">
+                    <div class="form-section">
+                        <h4>Contrôles de Recevabilité (ÉTAPE 9)</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Conformité Documents</label>
+                                <select name="conformiteDocuments">
+                                    <option value="true">✅ Conforme</option>
+                                    <option value="false">❌ Non Conforme</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Cohérence Valeurs</label>
+                                <select name="coherenceValeurs">
+                                    <option value="true">✅ Cohérent</option>
+                                    <option value="false">❌ Incohérent</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Validité Origine</label>
+                                <select name="validiteOrigine">
+                                    <option value="true">✅ Valide</option>
+                                    <option value="false">❌ Invalide</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Agent Contrôleur</label>
+                            <input type="text" name="agentControleur" value="AGENT_CONTROLE_MALI" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Observations Contrôle</label>
+                            <textarea name="observationsControle" rows="3" placeholder="Observations sur les contrôles effectués..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Calcul du Devis (ÉTAPE 10)</h4>
+                        <div class="form-group">
+                            <label class="required">Agent Liquidateur</label>
+                            <input type="text" name="agentLiquidateur" value="AGENT_LIQUIDATEUR_MALI" required>
+                        </div>
+                        <p style="color: #6c757d; font-size: 0.9em; margin-top: 10px;">
+                            ℹ️ Le calcul du devis sera effectué automatiquement en fonction de la déclaration (droits de douane 15%, TVA 18%, redevance statistique 1%).
+                        </p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="fermerModal('modal-etape-9-10')">Annuler</button>
+                <button class="btn-submit" onclick="soumettreEtape910()">✅ Valider Contrôles et Devis</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Étape 11: Enregistrement -->
+    <div id="modal-etape-11" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>📋 ÉTAPE 11 - Enregistrement Déclaration Détaillée</h3>
+                <button class="modal-close" onclick="fermerModal('modal-etape-11')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-etape-11">
+                    <div class="form-section">
+                        <h4>Informations d'Enregistrement</h4>
+                        <div class="form-group">
+                            <label class="required">Agent d'Enregistrement</label>
+                            <input type="text" name="agentEnregistrement" value="AGENT_ENREG_MALI" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Bureau d'Enregistrement</label>
+                            <input type="text" name="bureauEnregistrement" value="BAMAKO_DOUANES" readonly>
+                        </div>
+                        <p style="color: #6c757d; font-size: 0.9em; margin-top: 10px;">
+                            ℹ️ L'enregistrement créera un numéro de bulletin officiel et archivera la déclaration dans le système douanier malien.
+                        </p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="fermerModal('modal-etape-11')">Annuler</button>
+                <button class="btn-submit" onclick="soumettreEtape11()">✅ Enregistrer Déclaration</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Étapes 12-13: Contrôles Douaniers et Liquidation -->
+    <div id="modal-etape-12-13" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>🛃 ÉTAPES 12-13 - Contrôles Douaniers et Liquidation</h3>
+                <button class="modal-close" onclick="fermerModal('modal-etape-12-13')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-etape-12-13">
+                    <div class="form-section">
+                        <h4>Contrôles Douaniers (ÉTAPE 12)</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required">Type de Contrôle</label>
+                                <select name="typeControle" required>
+                                    <option value="DOCUMENTAIRE">📄 Documentaire</option>
+                                    <option value="PHYSIQUE">📦 Physique</option>
+                                    <option value="SCANNER">🔬 Scanner</option>
+                                    <option value="APPROFONDI">🔍 Approfondi</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="required">Résultat Contrôle</label>
+                                <select name="resultatControle" required>
+                                    <option value="CONFORME">✅ Conforme</option>
+                                    <option value="NON_CONFORME">❌ Non Conforme</option>
+                                    <option value="AVEC_RESERVES">⚠️ Avec Réserves</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Agent Contrôleur Douanes</label>
+                            <input type="text" name="agentControleur" value="AGENT_CONTROLE_DOUANES" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Observations Contrôle</label>
+                            <textarea name="observationsControle" rows="3" placeholder="Observations sur les contrôles douaniers effectués..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Émission Bulletin de Liquidation (ÉTAPE 13)</h4>
+                        <div class="form-group">
+                            <label class="required">Agent Liquidateur</label>
+                            <input type="text" name="agentLiquidateur" value="AGENT_LIQUIDATEUR" required>
+                        </div>
+                        <p style="color: #6c757d; font-size: 0.9em; margin-top: 10px;">
+                            ℹ️ Le bulletin de liquidation sera émis avec le montant total calculé lors de l'étape 10. Il servira de base pour le paiement des droits et taxes.
+                        </p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="fermerModal('modal-etape-12-13')">Annuler</button>
+                <button class="btn-submit" onclick="soumettreEtape1213()">✅ Valider Contrôles et Liquidation</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Étape 14: Paiement -->
+    <div id="modal-etape-14" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>💳 ÉTAPE 14 - Paiement Droits et Taxes</h3>
+                <button class="modal-close" onclick="fermerModal('modal-etape-14')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-etape-14">
+                    <div class="form-section">
+                        <h4>Informations de Paiement</h4>
+                        <div id="montant-info" style="background: #d4edda; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                            <strong>Montant à payer :</strong> <span id="montant-a-payer">Chargement...</span> FCFA
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required">Référence Paiement</label>
+                                <input type="text" name="referencePaiement" placeholder="Ex: PAY_MLI_2025_001" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required">Mode de Paiement</label>
+                                <select name="modePaiement" required>
+                                    <option value="VIREMENT_BCEAO">🏦 Virement BCEAO</option>
+                                    <option value="CHEQUE_TRESOR">💰 Chèque Trésor</option>
+                                    <option value="ESPECES">💵 Espèces</option>
+                                    <option value="VIREMENT_BANCAIRE">🏦 Virement Bancaire</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="required">Compte Trésor Destination</label>
+                            <input type="text" name="compteTresor" value="TRESOR_MALI_001" required>
+                        </div>
+                        
+                        <p style="color: #6c757d; font-size: 0.9em; margin-top: 10px;">
+                            ℹ️ Le paiement sera enregistré auprès du Trésor Public du Mali et de la BCEAO. Une confirmation sera générée pour transmission vers le Kit d'interconnexion.
+                        </p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="fermerModal('modal-etape-14')">Annuler</button>
+                <button class="btn-submit" onclick="soumettreEtape14()">✅ Confirmer Paiement</button>
+            </div>
+        </div>
+    </div>
+
     <div id="notification-mali" class="notification-mali"></div>
 
-    <script>
-        // Configuration Mali
-        const API_BASE_MALI = window.location.origin + '/api';
-        window.SYSTEME_TYPE = 'PAYS_B';
-        window.PAYS_CODE = 'MLI';
-
-        let statusIntervalMali;
-        let refreshIntervalMali;
-
-        // Initialisation Mali
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🇲🇱 Initialisation Mali - Pays B de destination (Bamako)');
-            
-            document.getElementById('init-time-mali').textContent = new Date().toLocaleTimeString();
-            
-            // Vérifications périodiques
-            chargerDonneesMali();
-            refreshIntervalMali = setInterval(chargerDonneesMali, 10000);
-            
-            // Charger la liste des manifestes disponibles pour le workflow manuel
-            chargerManifestesDisponibles();
-            
-            ajouterLogMali('workflow', 'Service démarré', 'Mali opérationnel - Workflow manuel étapes 6-16 activé');
-        });
-
-        // Ouvrir le portail GUCE Mali
-        function ouvrirPortailGUCEMali() {
-            const urlGUCE = 'https://guce.gov.ml/portal';
-            
-            const nouvelleFenetre = window.open(
-                urlGUCE, 
-                'PortailGUCEMali',
-                'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=yes,menubar=yes'
-            );
-            
-            if (nouvelleFenetre) {
-                ajouterLogMali('guce', 'Portail GUCE Mali', 'Ouverture du portail GUCE Mali pour collecte documents');
-                afficherNotificationMali('🌐 Portail GUCE Mali ouvert dans une nouvelle fenêtre', 'info');
-            } else {
-                afficherNotificationMali('❌ Impossible d\'ouvrir le portail GUCE Mali. Vérifiez les pop-ups.', 'error');
-            }
-        }
-
-        // Simuler réception manifeste test - CORRIGÉ
-        async function simulerReceptionManifesteTest() {
-            ajouterLogMali('etape6', 'ÉTAPE 6', 'Test réception manifeste depuis Sénégal...');
-            afficherNotificationMali('🧪 Simulation réception manifeste Mali...', 'info');
-            
-            try {
-                const manifesteTest = {
-                    manifeste: {
-                        numero_origine: `TEST_MLI_${Date.now()}`,
-                        transporteur: 'SIMULATION DAKAR-BAMAKO',
-                        navire: 'TEST VESSEL MALI',
-                        portOrigine: 'Port de Dakar',
-                        dateArrivee: new Date().toISOString().split('T')[0],
-                        paysOrigine: 'SEN',
-                        format: 'TEST'
-                    },
-                    marchandises: [{
-                        position: 1,
-                        designation: 'Test Mali - Véhicule Simulation',
-                        poidsNet: 1500,
-                        poidsBrut: 1600,
-                        quantite: 1,
-                        importateur: 'SIMULATION IMPORT BAMAKO',
-                        destinataire: 'SIMULATION IMPORT BAMAKO',
-                        valeurEstimee: 5000000
-                    }],
-                    isTest: true
-                };
-
-                console.log('📤 Envoi manifeste test Mali:', manifesteTest);
-
-                const response = await fetch(`${API_BASE_MALI}/manifeste/reception`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Source-Country': 'SEN',
-                        'X-Source-System': 'KIT_INTERCONNEXION',
-                        'X-Test-Mode': 'true',
-                        'X-Correlation-ID': `TEST_MLI_${Date.now()}`
-                    },
-                    body: JSON.stringify(manifesteTest)
-                });
-                
-                console.log('📥 Réponse Mali:', response.status);
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log('✅ Données reçues:', data);
-                    
-                    afficherNotificationMali('✅ Manifeste test reçu au Mali avec succès', 'success');
-                    ajouterLogMali('etape6', 'ÉTAPE 6 TERMINÉE', `Manifeste ${data.manifeste?.id || 'TEST'} enregistré - Prochaine: Collecte GUCE (étape 7)`);
-                    
-                    // Stocker l'ID du manifeste pour les étapes suivantes
-                    window.dernierManifesteId = data.manifeste?.id;
-                    
-                    // Actualiser les données
-                    setTimeout(() => {
-                        chargerDonneesMali();
-                        chargerManifestesDisponibles();
-                    }, 1000);
-                } else {
-                    const errorData = await response.text();
-                    console.error('❌ Erreur réponse:', errorData);
-                    throw new Error(`HTTP ${response.status}: ${errorData}`);
-                }
-                
-            } catch (error) {
-                console.error('❌ Erreur simulation Mali:', error);
-                ajouterLogMali('error', 'ERREUR ÉTAPE 6', error.message);
-                afficherNotificationMali(`❌ Erreur simulation Mali: ${error.message}`, 'error');
-            }
-        }
-
-        // Charger les manifestes disponibles pour le workflow manuel
-        async function chargerManifestesDisponibles() {
-            try {
-                const response = await fetch(`${API_BASE_MALI}/manifeste/lister?limite=20`);
-                const data = await response.json();
-                
-                const select = document.getElementById('select-manifeste-mali');
-                
-                if (data.status === 'SUCCESS' && data.manifestes && data.manifestes.length > 0) {
-                    select.innerHTML = '<option value="">-- Sélectionner un manifeste --</option>';
-                    
-                    data.manifestes.forEach(manifeste => {
-                        const option = document.createElement('option');
-                        option.value = manifeste.id;
-                        option.textContent = `${manifeste.numeroOrigine || manifeste.id} - ${manifeste.transporteur || 'N/A'} (${manifeste.statut})`;
-                        select.appendChild(option);
-                    });
-                    
-                    afficherNotificationMali(`✅ ${data.manifestes.length} manifeste(s) chargé(s)`, 'success');
-                } else {
-                    select.innerHTML = '<option value="">-- Aucun manifeste disponible --</option>';
-                    afficherNotificationMali('⚠️ Aucun manifeste disponible', 'warning');
-                }
-                
-            } catch (error) {
-                console.error('Erreur chargement manifestes:', error);
-                afficherNotificationMali('❌ Erreur chargement manifestes', 'error');
-            }
-        }
-
-        // Exécuter une étape manuelle spécifique
-        async function executerEtape(action) {
-            const selectManifeste = document.getElementById('select-manifeste-mali');
-            const manifesteId = selectManifeste.value || window.dernierManifesteId;
-            
-            if (!manifesteId) {
-                afficherNotificationMali('⚠️ Veuillez d\'abord sélectionner un manifeste ou créer un test', 'warning');
-                return;
-            }
-            
-            const nomEtape = {
-                'collecter_documents_guce': 'ÉTAPE 7 - Collecte Documents GUCE',
-                'creer_declaration': 'ÉTAPE 8 - Création Déclaration',
-                'controler_et_calculer_devis': 'ÉTAPES 9-10 - Contrôles et Devis',
-                'enregistrer_declaration': 'ÉTAPE 11 - Enregistrement Déclaration',
-                'effectuer_controles_liquidation': 'ÉTAPES 12-13 - Contrôles et Liquidation',
-                'effectuer_paiement': 'ÉTAPE 14 - Paiement',
-                'transmettre_vers_kit': 'ÉTAPES 15-16 - Transmission Kit'
-            }[action] || action;
-            
-            ajouterLogMali('manuel', nomEtape, `Exécution pour manifeste ${manifesteId}...`);
-            afficherNotificationMali(`⚙️ ${nomEtape} en cours...`, 'info');
-            
-            try {
-                const response = await fetch(`${API_BASE_MALI}/workflow/manuel`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Source-System': 'MALI_FRONTEND_MANUEL'
-                    },
-                    body: JSON.stringify({
-                        action: action,
-                        manifesteId: manifesteId,
-                        donnees: {
-                            agentMalien: 'AGENT_MALI_SIMULATION',
-                            dateOperation: new Date().toISOString()
-                        }
-                    })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    // Afficher le résultat
-                    const resultatDiv = document.getElementById('resultat-etape-mali');
-                    const resultatContent = document.getElementById('resultat-etape-content');
-                    resultatDiv.style.display = 'block';
-                    resultatContent.textContent = JSON.stringify(data, null, 2);
-                    
-                    afficherNotificationMali(`✅ ${nomEtape} terminée avec succès`, 'success');
-                    ajouterLogMali('manuel', nomEtape, `✅ Succès - Prochaine étape disponible`);
-                    
-                    // Marquer l'étape comme complétée dans l'interface
-                    marquerEtapeComplete(action);
-                    
-                    // Actualiser les données
-                    setTimeout(() => chargerDonneesMali(), 1000);
-                } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Erreur étape');
-                }
-                
-            } catch (error) {
-                console.error(`Erreur ${nomEtape}:`, error);
-                afficherNotificationMali(`❌ ${nomEtape} échouée: ${error.message}`, 'error');
-                ajouterLogMali('error', nomEtape, `❌ Erreur: ${error.message}`);
-            }
-        }
-
-        // Exécuter le workflow complet automatiquement
-        async function executerWorkflowComplet() {
-            const selectManifeste = document.getElementById('select-manifeste-mali');
-            const manifesteId = selectManifeste.value || window.dernierManifesteId;
-            
-            if (!manifesteId) {
-                afficherNotificationMali('⚠️ Veuillez d\'abord sélectionner un manifeste ou créer un test', 'warning');
-                return;
-            }
-            
-            const btnWorkflow = document.getElementById('btn-workflow-complet');
-            btnWorkflow.disabled = true;
-            btnWorkflow.innerHTML = '⏳ Workflow en cours...<br><small>Veuillez patienter</small>';
-            
-            ajouterLogMali('workflow', 'Workflow Complet', `Démarrage workflow Mali complet pour ${manifesteId}`);
-            afficherNotificationMali('🚀 Démarrage workflow Mali complet (étapes 7-16)...', 'info');
-            
-            try {
-                const response = await fetch(`${API_BASE_MALI}/workflow/manuel`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Source-System': 'MALI_FRONTEND_AUTO'
-                    },
-                    body: JSON.stringify({
-                        action: 'workflow_complet_auto',
-                        manifesteId: manifesteId,
-                        donnees: {
-                            agentMalien: 'AGENT_MALI_AUTO',
-                            modeExecution: 'AUTOMATIQUE'
-                        }
-                    })
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    
-                    // Afficher le résultat complet
-                    const resultatDiv = document.getElementById('resultat-etape-mali');
-                    const resultatContent = document.getElementById('resultat-etape-content');
-                    resultatDiv.style.display = 'block';
-                    resultatContent.textContent = JSON.stringify(data, null, 2);
-                    
-                    if (data.status === 'WORKFLOW_COMPLET') {
-                        afficherNotificationMali('🎉 Workflow Mali complet terminé avec succès!', 'success');
-                        ajouterLogMali('workflow', 'Workflow Complet', `✅ Toutes les étapes (7-16) terminées`);
-                        
-                        // Marquer toutes les étapes comme complètes
-                        marquerToutesEtapesCompletes();
-                    } else {
-                        afficherNotificationMali(`⚠️ Workflow terminé avec erreurs`, 'warning');
-                        ajouterLogMali('workflow', 'Workflow Complet', `⚠️ Erreur: ${data.erreur}`);
-                    }
-                    
-                    // Actualiser les données
-                    setTimeout(() => chargerDonneesMali(), 1000);
-                } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Erreur workflow');
-                }
-                
-            } catch (error) {
-                console.error('Erreur workflow complet:', error);
-                afficherNotificationMali(`❌ Workflow échoué: ${error.message}`, 'error');
-                ajouterLogMali('error', 'Workflow Complet', `❌ Erreur: ${error.message}`);
-            } finally {
-                btnWorkflow.disabled = false;
-                btnWorkflow.innerHTML = '🚀 Exécuter Workflow Complet Automatique<br><small style="font-size: 12px;">(Étapes 7 à 16 en une fois)</small>';
-            }
-        }
-
-        // Marquer une étape comme complétée dans l'interface
-        function marquerEtapeComplete(action) {
-            const mapping = {
-                'collecter_documents_guce': 'mali-step-7',
-                'creer_declaration': 'mali-step-8',
-                'controler_et_calculer_devis': 'mali-step-9-10',
-                'enregistrer_declaration': 'mali-step-11',
-                'effectuer_controles_liquidation': 'mali-step-12-13',
-                'effectuer_paiement': 'mali-step-14',
-                'transmettre_vers_kit': 'mali-step-15-16'
-            };
-            
-            const stepId = mapping[action];
-            if (stepId) {
-                const step = document.getElementById(stepId);
-                if (step) {
-                    step.className = 'workflow-step-mali completed';
-                    const stepNumber = step.querySelector('.step-number-mali');
-                    const stepStatus = step.querySelector('.step-status-mali');
-                    if (stepNumber) stepNumber.className = 'step-number-mali completed';
-                    if (stepStatus) {
-                        stepStatus.className = 'step-status-mali completed';
-                        stepStatus.textContent = 'Terminé';
-                    }
-                }
-            }
-        }
-
-        // Marquer toutes les étapes comme complètes
-        function marquerToutesEtapesCompletes() {
-            const etapes = [
-                'collecter_documents_guce',
-                'creer_declaration',
-                'controler_et_calculer_devis',
-                'enregistrer_declaration',
-                'effectuer_controles_liquidation',
-                'effectuer_paiement',
-                'transmettre_vers_kit'
-            ];
-            
-            etapes.forEach(etape => marquerEtapeComplete(etape));
-        }
-
-        // Ouvrir guide workflow Mali
-        function ouvrirGuideWorkflowMali() {
-            const guideContent = `
-                <h2>🇲🇱 Guide Workflow Mali - Étapes 6-16</h2>
-                <p><strong>Mode de traitement:</strong> MANUEL (Selon rapport PDF UEMOA)</p>
-                
-                <h3>📋 Étapes à réaliser manuellement :</h3>
-                <ul>
-                    <li><strong>ÉTAPE 6:</strong> ✅ Réception et enregistrement manifeste (Automatique via Kit)</li>
-                    <li><strong>ÉTAPE 7:</strong> 👤 Collecte documents via GUCE Mali</li>
-                    <li><strong>ÉTAPE 8:</strong> 👤 Création déclaration par déclarant malien</li>
-                    <li><strong>ÉTAPES 9-10:</strong> 👤 Contrôles recevabilité + Calcul devis</li>
-                    <li><strong>ÉTAPE 11:</strong> 👤 Enregistrement déclaration détaillée</li>
-                    <li><strong>ÉTAPES 12-13:</strong> 👤 Contrôles douaniers + Bulletin liquidation</li>
-                    <li><strong>ÉTAPE 14:</strong> 👤 Paiement droits et taxes (BCEAO/Trésor Mali)</li>
-                    <li><strong>ÉTAPES 15-16:</strong> 👤 Transmission autorisation vers Kit d'interconnexion</li>
-                </ul>
-                
-                <p><strong>⏳ Durée estimée:</strong> Dépend du déclarant malien et des contrôles</p>
-                <p><strong>📍 Lieu:</strong> Bamako - Douanes Mali</p>
-                <p><strong>🔄 Après étape 16:</strong> Retour vers Sénégal (étape 17)</p>
-            `;
-            
-            const guideWindow = window.open('', 'GuideMali', 'width=800,height=600,scrollbars=yes');
-            guideWindow.document.write(`
-                <html>
-                    <head>
-                        <title>Guide Workflow Mali</title>
-                        <style>
-                            body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
-                            .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; }
-                            h2 { color: #ce1126; text-align: center; }
-                            h3 { color: #14b53a; margin-top: 25px; }
-                            ul li { margin: 8px 0; padding: 5px; }
-                            .etape { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
-                            .manuel { background: #fff3cd; }
-                            .auto { background: #d4edda; }
-                            .close-btn { background: #ce1126; color: white; padding: 10px 20px; border: none; border-radius: 5px; float: right; cursor: pointer; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            ${guideContent}
-                            <br><br>
-                            <button class="close-btn" onclick="window.close()">Fermer</button>
-                        </div>
-                    </body>
-                </html>
-            `);
-            
-            ajouterLogMali('manuel', 'Guide ouvert', 'Guide workflow Mali étapes 6-16 consulté');
-        }
-
-        // Vérifier statut workflow Mali
-        async function verifierStatutWorkflowMali() {
-            try {
-                const response = await fetch(`${API_BASE_MALI}/health`);
-                const data = await response.json();
-                
-                afficherNotificationMali('🔍 Mali opérationnel - Workflow manuel prêt', 'success');
-                ajouterLogMali('workflow', 'Statut vérifié', 'Système Mali opérationnel - Étapes 6-16 disponibles');
-                
-            } catch (error) {
-                afficherNotificationMali('❌ Erreur vérification Mali', 'error');
-            }
-        }
-
-        // Charger données Mali
-        async function chargerDonneesMali() {
-            await Promise.all([
-                chargerStatistiquesMali(),
-                chargerManifestesMali(),
-                chargerDeclarationsMali(),
-                chargerPaiementsMali()
-            ]);
-        }
-
-        // Charger statistiques Mali
-        async function chargerStatistiquesMali() {
-            try {
-                const response = await fetch(`${API_BASE_MALI}/statistiques`);
-                const data = await response.json();
-                
-                if (data.status === 'SUCCESS' && data.statistiques) {
-                    const stats = data.statistiques;
-                    
-                    document.getElementById('stat-manifestes-mali').textContent = stats.manifestesRecus || 0;
-                    document.getElementById('stat-documents').textContent = stats.documentsGUCECollectes || 0;
-                    document.getElementById('stat-declarations').textContent = stats.declarationsCreees || 0;
-                    document.getElementById('stat-paiements-mali').textContent = stats.paiementsEffectues || 0;
-                    
-                    // Calculer étapes complétées
-                    const etapesTotal = 11; // Étapes 6-16 = 11 étapes
-                    const etapesCompletes = Math.min(
-                        (stats.manifestesRecus || 0) + 
-                        (stats.declarationsCreees || 0) + 
-                        (stats.paiementsEffectues || 0), 
-                        etapesTotal
-                    );
-                    document.getElementById('etapes-completees').textContent = `${etapesCompletes}/${etapesTotal}`;
-                    
-                    if (stats.performance?.tempsTraitementMoyen) {
-                        document.getElementById('temps-moyen-mali').textContent = Math.round(stats.performance.tempsTraitementMoyen / 60) + ' min';
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Erreur chargement statistiques Mali:', error);
-            }
-        }
-
-        // Charger manifestes Mali
-        async function chargerManifestesMali() {
-            try {
-                const response = await fetch(`${API_BASE_MALI}/manifeste/lister?limite=5`);
-                const data = await response.json();
-                
-                const container = document.getElementById('manifestes-mali-list');
-                
-                if (data.status === 'SUCCESS' && data.manifestes && data.manifestes.length > 0) {
-                    container.innerHTML = data.manifestes.map(manifeste => `
-                        <div class="data-item-mali from-senegal">
-                            <div class="item-header-mali">
-                                📥 ${manifeste.numeroOrigine || manifeste.id} - ${manifeste.transporteur || 'Transport Mali'}
-                                <span class="item-status-mali recu">REÇU ÉTAPE 6</span>
-                            </div>
-                            <div class="item-details-mali">
-                                🇸🇳 Depuis: ${manifeste.origine?.pays || 'Sénégal (Port de Dakar)'}<br>
-                                📦 ${manifeste.marchandises?.nombre || 0} marchandise(s)<br>
-                                🎯 Destination: Bamako, Mali<br>
-                                📅 ${new Date(manifeste.dateReception).toLocaleString('fr-FR')}<br>
-                                ⏳ Prochaine étape: Collecte documents GUCE Mali (étape 7)
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = '<p>En attente de manifestes depuis Port de Dakar...</p>';
-                }
-                
-            } catch (error) {
-                console.error('Erreur chargement manifestes Mali:', error);
-                document.getElementById('manifestes-mali-list').innerHTML = '<p>Erreur de chargement</p>';
-            }
-        }
-
-        // Charger déclarations Mali
-        async function chargerDeclarationsMali() {
-            try {
-                const response = await fetch(`${API_BASE_MALI}/declaration/lister?limite=5`);
-                const data = await response.json();
-                
-                const container = document.getElementById('declarations-mali-list');
-                
-                if (data.status === 'SUCCESS' && data.declarations && data.declarations.length > 0) {
-                    container.innerHTML = data.declarations.map(declaration => `
-                        <div class="data-item-mali processed">
-                            <div class="item-header-mali">
-                                📝 ${declaration.numeroDeclaration}
-                                <span class="item-status-mali manuel">MANUEL</span>
-                            </div>
-                            <div class="item-details-mali">
-                                📋 Manifeste origine: ${declaration.manifesteOrigine || 'N/A'}<br>
-                                💰 Liquidation: ${declaration.liquidation?.montantTotal?.toLocaleString() || 'En cours'} FCFA<br>
-                                👤 Mode: ${declaration.modeCreation || 'MANUEL'}<br>
-                                📅 ${new Date(declaration.dateCreation).toLocaleString('fr-FR')}
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = '<p>Aucune déclaration créée par déclarants maliens</p>';
-                }
-                
-            } catch (error) {
-                console.error('Erreur chargement déclarations Mali:', error);
-                document.getElementById('declarations-mali-list').innerHTML = '<p>Erreur de chargement</p>';
-            }
-        }
-
-        // Charger paiements Mali
-        async function chargerPaiementsMali() {
-            try {
-                const response = await fetch(`${API_BASE_MALI}/paiement/lister?limite=5`);
-                const data = await response.json();
-                
-                const container = document.getElementById('paiements-mali-list');
-                
-                if (data.status === 'SUCCESS' && data.paiements && data.paiements.length > 0) {
-                    container.innerHTML = data.paiements.map(paiement => `
-                        <div class="data-item-mali complete">
-                            <div class="item-header-mali">
-                                💳 ${paiement.id} - ${paiement.montantPaye?.toLocaleString() || 0} FCFA
-                                <span class="item-status-mali complete">ÉTAPE 14</span>
-                            </div>
-                            <div class="item-details-mali">
-                                🏛️ Destination: ${paiement.compteDestination || 'TRESOR_MALI_BCEAO'}<br>
-                                🏦 Mode: ${paiement.modePaiement || 'VIREMENT_BCEAO'}<br>
-                                📋 Déclaration: ${paiement.numeroDeclaration}<br>
-                                📅 ${new Date(paiement.datePaiement).toLocaleString('fr-FR')}<br>
-                                ⏳ Prochaine étape: Transmission Kit (étapes 15-16)
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = '<p>Aucun paiement effectué au Trésor Mali</p>';
-                }
-                
-            } catch (error) {
-                console.error('Erreur chargement paiements Mali:', error);
-                document.getElementById('paiements-mali-list').innerHTML = '<p>Erreur de chargement</p>';
-            }
-        }
-
-        // Ajouter entrée dans le log Mali
-        function ajouterLogMali(type, action, details) {
-            const container = document.getElementById('mali-log');
-            const timestamp = new Date().toLocaleTimeString();
-            
-            const entry = document.createElement('div');
-            entry.className = `log-entry-mali ${type}`;
-            entry.innerHTML = `
-                <strong>[MALI] ${action}</strong> - ${details}
-                <span style="float: right; color: #6c757d; font-size: 0.8em;">${timestamp}</span>
-            `;
-            
-            container.prepend(entry);
-            
-            // Garder seulement les 20 dernières entrées
-            const entries = container.querySelectorAll('.log-entry-mali');
-            if (entries.length > 20) {
-                entries[entries.length - 1].remove();
-            }
-        }
-
-        // Afficher notification Mali
-        function afficherNotificationMali(message, type) {
-            const notification = document.getElementById('notification-mali');
-            notification.textContent = message;
-            notification.className = `notification-mali ${type}`;
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 5000);
-        }
-
-        // Cleanup
-        window.addEventListener('beforeunload', () => {
-            if (statusIntervalMali) clearInterval(statusIntervalMali);
-            if (refreshIntervalMali) clearInterval(refreshIntervalMali);
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
