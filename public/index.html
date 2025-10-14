@@ -755,6 +755,55 @@
             </div>
         </section>
 
+        <section class="card full-width">
+            <h2>🚛 Workflow Transit Mali (Étapes 11, 13-14)</h2>
+            <p>Traitement des déclarations transit reçues depuis le Sénégal via le Kit d'interconnexion</p>
+            
+            <div class="workflow-mali">
+                <div class="workflow-step-mali completed" id="mali-transit-step-11">
+                    <div class="step-number-mali completed">11</div>
+                    <div class="step-content-mali">
+                        <h4>📥 Réception Transit</h4>
+                        <p>Copie déclaration Kit</p>
+                    </div>
+                </div>
+                
+                <div class="workflow-step-mali manual" id="mali-transit-step-13">
+                    <div class="step-number-mali manual">13</div>
+                    <div class="step-content-mali">
+                        <h4>📦 Arrivée Mali</h4>
+                        <p>Contrôles + Visa</p>
+                    </div>
+                </div>
+                
+                <div class="workflow-step-mali manual" id="mali-transit-step-14">
+                    <div class="step-number-mali manual">14</div>
+                    <div class="step-content-mali">
+                        <h4>📤 Message Kit</h4>
+                        <p>Vers Sénégal</p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-mali" onclick="chargerTransitsDisponibles()">
+                    🔄 Actualiser Liste Transits
+                </button>
+                <button class="btn btn-manuel" onclick="simulerArriveeTransit()">
+                    📦 Simuler Arrivée Transit (ÉTAPES 13-14)
+                </button>
+            </div>
+
+            <div id="transits-mali-list" style="margin-top: 20px;">
+                <h3>📋 Déclarations Transit Reçues</h3>
+                <div class="data-list">
+                    <p>Aucun transit reçu...</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="card full-width">
+
         <main class="main">
             <section class="card full-width">
                 <h2>🇲🇱 Workflow Mali Manuel (Étapes 6-16)</h2>

@@ -57,6 +57,12 @@ const apiRouter = {
   
   // ✅ NOUVEAU: Workflow manuel Mali (Étapes 7-16)
   'POST /api/workflow/manuel': () => require('./api/workflow/manuel'),
+
+  // ✅ WORKFLOW TRANSIT Mali (Étapes 11, 13-14)
+  'POST /api/transit/copie': () => require('./api/transit/copie'),           // ÉTAPE 11
+  'POST /api/transit/arrivee': () => require('./api/transit/arrivee'),       // ÉTAPES 13-14
+  'GET /api/transit/arrivee': () => require('./api/transit/arrivee'),        // Liste arrivées
+  'GET /api/transit/lister': () => require('./api/transit/lister'),          // Liste transits
   
   // ✅ Tests Kit MuleSoft
   'GET /api/kit/test': () => require('./api/kit/test'),
