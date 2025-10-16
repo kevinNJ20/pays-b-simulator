@@ -1059,6 +1059,248 @@ async function verifierStatutWorkflowMali() {
 }
 
 // ============================================
+// WORKFLOW TRANSIT MALI - ÉTAPES 11, 13-14
+// ============================================
+
+// Charger les transits disponibles
+async function chargerTransitsDisponibles() {
+    try {
+        const response = await fetch(`${API_BASE_MALI}/transit/lister?limite=20`);
+        const data = await response.json();
+        
+        const container = document.getElementById('transits-mali-list');
+        
+        if (data.status === 'SUCCESS' && data.transits && data.transits.length > 0) {
+            let html = '<h3>📋 Déclarations Transit Reçues au Mali</h3><div class="data-list">';
+            
+            data.transits.forEach(transit => {
+                const arriveeStatus = transit.arrivee ? '✅ Arrivée confirmée' : '⏳ En attente';
+                const messageStatus = transit.messageArrivee ? '📤 Message envoyé' : '📭 Pas encore envoyé';
+                
+                html += `
+                    <div class="data-item-mali ${transit.arrivee ? 'complete' : 'waiting'}">
+                        <div class="item-header-mali">
+                            🚛 ${transit.numeroDeclaration} - ${transit.transport?.transporteur || 'N/A'}
+                            <span class="item-status-mali ${transit.arrivee ? 'complete' : 'waiting'}">
+                                ${arriveeStatus}
+                            </span>
+                        </div>
+                        <div class="item-details-mali">
+                            🇸🇳 Départ: ${transit.paysDepart || 'SEN'} → 🇲🇱 Destination: Mali<br>
+                            🚚 Mode: ${transit.transport?.modeTransport || 'ROUTIER'}<br>
+                            📍 Itinéraire: ${transit.transport?.itineraire || 'N/A'}<br>
+                            ⏱️ Délai: ${transit.transport?.delaiRoute || 'N/A'}<br>
+                            📦 Marchandises: ${transit.marchandises?.nombre || 0}<br>
+                            📅 Reçu le: ${new Date(transit.dateReception).toLocaleString('fr-FR')}<br>
+                            ${transit.arrivee ? `✅ Arrivé le: ${new Date(transit.arrivee.dateArrivee).toLocaleString('fr-FR')}<br>` : ''}
+                            ${transit.messageArrivee ? `📤 ${messageStatus} le: ${new Date(transit.messageArrivee.dateEnvoi).toLocaleString('fr-FR')}` : messageStatus}
+                        </div>
+                        ${!transit.arrivee ? `
+                            <button class="btn btn-mali" onclick="confirmerArriveeTransit('${transit.id}')" style="margin-top: 10px; width: 100%;">
+                                📦 Confirmer Arrivée (ÉTAPES 13-14)
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            html += `
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <strong>📊 Statistiques Transit:</strong><br>
+                    Total: ${data.statistiques?.total || 0} |
+                    Arrivées: ${data.statistiques?.arrivees?.confirmees || 0} |
+                    En attente: ${data.statistiques?.arrivees?.enAttente || 0} |
+                    Messages envoyés: ${data.statistiques?.messagesEnvoyes || 0}
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = `
+                <h3>📋 Déclarations Transit Reçues</h3>
+                <div class="data-list">
+                    <p style="text-align: center; padding: 20px; color: #6c757d;">
+                        Aucune déclaration transit reçue depuis le Sénégal
+                    </p>
+                </div>
+            `;
+        }
+        
+        ajouterLogMali('transit', 'Liste Transit', `${data.transits?.length || 0} déclaration(s) transit chargée(s)`);
+        
+    } catch (error) {
+        console.error('Erreur chargement transits:', error);
+        const container = document.getElementById('transits-mali-list');
+        container.innerHTML = `
+            <h3>📋 Déclarations Transit Reçues</h3>
+            <div class="data-list">
+                <p style="color: #dc3545;">❌ Erreur de chargement des transits</p>
+            </div>
+        `;
+    }
+}
+
+// Simuler arrivée transit (ÉTAPES 13-14)
+async function simulerArriveeTransit() {
+    ajouterLogMali('transit', 'ÉTAPES 13-14', 'Simulation arrivée marchandises transit...');
+    afficherNotificationMali('🧪 Simulation arrivée transit Mali...', 'info');
+    
+    try {
+        // Créer d'abord une déclaration transit test si nécessaire
+        const transitTest = {
+            transit_original: {
+                numero_declaration: `TRANS_TEST_${Date.now()}`,
+                pays_depart: 'SEN',
+                bureau_depart: '18N_DAKAR',
+                date_creation: new Date().toISOString(),
+                transporteur: 'TEST TRANSPORT SAHEL',
+                itineraire: 'Dakar-Bamako via Kayes',
+                delai_route: '72 heures'
+            },
+            marchandises: [{
+                designation: 'Test Transit - Marchandises Simulation',
+                poids: 5000,
+                nombreColis: 100
+            }],
+            instructions_mali: {
+                attendre_arrivee: true,
+                delai_maximum: '72 heures',
+                controles_passage: false,
+                message_arrivee_requis: true
+            },
+            metadata: {
+                correlation_id: `TEST_TRANS_${Date.now()}`,
+                etape_actuelle: 11,
+                prochaine_etape: '13-14_ARRIVEE_MALI',
+                workflow_type: 'TRANSIT'
+            }
+        };
+
+        // ÉTAPE 11: Créer d'abord le transit
+        const responseCreation = await fetch(`${API_BASE_MALI}/transit/copie`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Source-Country': 'SEN',
+                'X-Source-System': 'KIT_TRANSIT_SENEGAL_MALI',
+                'X-Correlation-ID': transitTest.metadata.correlation_id
+            },
+            body: JSON.stringify(transitTest)
+        });
+
+        if (!responseCreation.ok) {
+            throw new Error(`ÉTAPE 11 échouée: ${responseCreation.status}`);
+        }
+
+        const dataCreation = await responseCreation.json();
+        const transitId = dataCreation.transit?.id;
+        
+        afficherNotificationMali('✅ ÉTAPE 11 OK - Transit enregistré', 'success');
+        ajouterLogMali('transit', 'ÉTAPE 11 TERMINÉE', `Transit ${transitId} créé au Mali`);
+
+        // Attendre un peu avant de simuler l'arrivée
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // ÉTAPES 13-14: Simuler l'arrivée
+        const donneesArrivee = {
+            transitId: transitId,
+            donneesArrivee: {
+                controleEffectue: true,
+                visaAppose: true,
+                conformiteItineraire: true,
+                delaiRespecte: true,
+                declarationDetailDeposee: false,
+                agentReceptionnaire: 'AGENT_TEST_MALI_TRANSIT',
+                observationsArrivee: 'Test automatique - Arrivée simulation'
+            }
+        };
+
+        const responseArrivee = await fetch(`${API_BASE_MALI}/transit/arrivee`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Source-System': 'MALI_TRANSIT_TEST'
+            },
+            body: JSON.stringify(donneesArrivee)
+        });
+
+        if (responseArrivee.ok) {
+            const dataArrivee = await responseArrivee.json();
+            
+            afficherNotificationMali('✅ ÉTAPES 13-14 OK - Arrivée confirmée et transmise', 'success');
+            ajouterLogMali('transit', 'ÉTAPES 13-14 TERMINÉES', 
+                `Transit ${transitId} - Arrivée confirmée et message envoyé vers Kit`);
+            
+            // Actualiser la liste des transits
+            setTimeout(() => chargerTransitsDisponibles(), 1000);
+        } else {
+            throw new Error(`ÉTAPES 13-14 échouées: ${responseArrivee.status}`);
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur simulation transit:', error);
+        ajouterLogMali('error', 'ERREUR TRANSIT', error.message);
+        afficherNotificationMali(`❌ Erreur simulation transit: ${error.message}`, 'error');
+    }
+}
+
+// Confirmer arrivée pour un transit existant
+async function confirmerArriveeTransit(transitId) {
+    ajouterLogMali('transit', 'ÉTAPES 13-14', `Confirmation arrivée pour transit ${transitId}...`);
+    afficherNotificationMali('⚙️ Confirmation arrivée en cours...', 'info');
+    
+    try {
+        const donneesArrivee = {
+            transitId: transitId,
+            donneesArrivee: {
+                controleEffectue: true,
+                visaAppose: true,
+                conformiteItineraire: true,
+                delaiRespecte: true,
+                declarationDetailDeposee: false,
+                agentReceptionnaire: 'AGENT_MALI_TRANSIT',
+                observationsArrivee: 'Arrivée confirmée manuellement'
+            }
+        };
+
+        const response = await fetch(`${API_BASE_MALI}/transit/arrivee`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Source-System': 'MALI_TRANSIT_MANUEL'
+            },
+            body: JSON.stringify(donneesArrivee)
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            
+            afficherNotificationMali('✅ ÉTAPES 13-14 terminées - Message transmis vers Kit', 'success');
+            ajouterLogMali('transit', 'ÉTAPES 13-14 TERMINÉES', 
+                `Transit ${transitId} - Arrivée confirmée, message envoyé vers Sénégal`);
+            
+            // Actualiser la liste
+            setTimeout(() => chargerTransitsDisponibles(), 1000);
+        } else {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Erreur confirmation arrivée');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erreur confirmation arrivée:', error);
+        ajouterLogMali('error', 'ERREUR TRANSIT', error.message);
+        afficherNotificationMali(`❌ Erreur: ${error.message}`, 'error');
+    }
+}
+
+// Charger les transits au démarrage
+setTimeout(() => {
+    chargerTransitsDisponibles();
+}, 2000);
+
+// ============================================
 // CHARGEMENT DES DONNÉES
 // ============================================
 
@@ -1067,7 +1309,8 @@ async function chargerDonneesMali() {
         chargerStatistiquesMali(),
         chargerManifestesMali(),
         chargerDeclarationsMali(),
-        chargerPaiementsMali()
+        chargerPaiementsMali(),
+        chargerTransitsDisponibles()  // ✅ NOUVEAU
     ]);
 }
 
