@@ -63,6 +63,12 @@ const apiRouter = {
   'POST /api/transit/arrivee': () => require('./api/transit/arrivee'),       // ÉTAPES 13-14
   'GET /api/transit/arrivee': () => require('./api/transit/arrivee'),        // Liste arrivées
   'GET /api/transit/lister': () => require('./api/transit/lister'),          // Liste transits
+
+  // APIs authentification Mali
+  'POST /api/auth/login': () => require('./api/auth/login'),
+  'POST /api/auth/logout': () => require('./api/auth/logout'),
+  'POST /api/auth/verify': () => require('./api/auth/verify'),
+  'GET /api/auth/verify': () => require('./api/auth/verify'),
   
   // ✅ Tests Kit MuleSoft
   'GET /api/kit/test': () => require('./api/kit/test'),
