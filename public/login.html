@@ -367,10 +367,10 @@
                 
                 if (response.ok && data.success) {
                     // Stocker le token
-                    localStorage.setItem('auth_token', data.token);
-                    localStorage.setItem('workflow', selectedWorkflow);
-                    localStorage.setItem('username', username);
-                    localStorage.setItem('user_role', data.user.role);
+                    localStorage.setItem('auth_token_mali', data.token);  // ← Correction ici
+                    localStorage.setItem('workflow_mali', selectedWorkflow);
+                    localStorage.setItem('username_mali', username);
+                    localStorage.setItem('user_role_mali', data.user.role); 
                     
                     showAlert('Connexion réussie! Redirection...', 'success');
                     
@@ -395,8 +395,8 @@
 
         // Vérifier si déjà connecté
         window.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('auth_token');
-            const workflow = localStorage.getItem('workflow');
+            const token = localStorage.getItem('auth_token_mali');
+            const workflow = localStorage.getItem('workflow_mali');
             
             if (token && workflow) {
                 // Rediriger vers la page appropriée
