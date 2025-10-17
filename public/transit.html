@@ -155,6 +155,11 @@
             box-shadow: 0 8px 25px rgba(20, 181, 58, 0.3);
         }
 
+        .btn-mali:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .workflow-mali {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -203,7 +208,7 @@
         }
 
         .transit-list {
-            max-height: 400px;
+            max-height: 500px;
             overflow-y: auto;
         }
 
@@ -229,6 +234,13 @@
             margin-bottom: 5px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+        }
+
+        .item-details {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin: 5px 0;
         }
 
         .item-status {
@@ -251,6 +263,36 @@
         .item-status.arrived {
             background: #d4edda;
             color: #155724;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+            z-index: 10000;
+            max-width: 350px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, #14b53a, #20c997);
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, #ce1126, #fd7e14);
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, #007bff, #6610f2);
         }
 
         .copyright {
@@ -344,10 +386,10 @@
                 </div>
 
                 <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-mali" onclick="simulerReceptionTransit()">
+                    <button class="btn btn-mali" onclick="simulerReceptionTransit()" id="btn-sim-reception">
                         📥 Simuler Réception Transit (Test)
                     </button>
-                    <button class="btn btn-mali" onclick="simulerArriveeTransit()">
+                    <button class="btn btn-mali" onclick="simulerArriveeTransit()" id="btn-sim-arrivee">
                         📦 Simuler Arrivée Transit (ÉTAPES 13-14)
                     </button>
                 </div>
@@ -356,7 +398,9 @@
             <section class="card full-width">
                 <h2>🚛 Déclarations Transit Reçues au Mali</h2>
                 <div class="transit-list" id="transits-list">
-                    <p>En attente de déclarations transit depuis le Sénégal...</p>
+                    <p style="text-align: center; padding: 20px; color: #6c757d;">
+                        En attente de déclarations transit depuis le Sénégal...
+                    </p>
                 </div>
                 <button class="btn btn-mali" onclick="chargerTransits()" style="width: 100%; margin-top: 15px;">
                     🔄 Actualiser
@@ -369,8 +413,15 @@
         </div>
     </div>
 
-    <script src="/script.js"></script>
+    <!-- Notification -->
+    <div id="notification-transit" class="notification"></div>
+
     <script>
+        const API_BASE = window.location.origin + '/api';
+
+        // ============================================
+        // AUTHENTIFICATION
+        // ============================================
         window.addEventListener('DOMContentLoaded', async () => {
             console.log('🔐 [TRANSIT MALI] Vérification authentification...');
             
@@ -384,33 +435,101 @@
             displayUserInfo('user-info-container');
             
             // Charger les données initiales
-            chargerTransits();
-            chargerStatistiques();
+            await chargerTransits();
+            await chargerStatistiques();
+            
+            // Rafraîchir automatiquement toutes les 10 secondes
+            setInterval(async () => {
+                await chargerTransits();
+                await chargerStatistiques();
+            }, 10000);
         });
 
-        async function simulerReceptionTransit() {
-            console.log('📥 Simulation réception transit Mali');
-            // Logique déjà dans script.js
-        }
-
+        // ============================================
+        // CHARGEMENT DES TRANSITS
+        // ============================================
         async function chargerTransits() {
-            console.log('🔄 Chargement transits Mali');
-            // Appel à chargerTransitsDisponibles() depuis script.js
-            if (typeof chargerTransitsDisponibles === 'function') {
-                await chargerTransitsDisponibles();
+            try {
+                console.log('🔄 [TRANSIT] Chargement des transits...');
                 
-                // Afficher dans la liste
+                const response = await fetch(`${API_BASE}/transit/lister?limite=20`);
+                const data = await response.json();
+                
                 const container = document.getElementById('transits-list');
-                const listContainer = document.getElementById('transits-mali-list');
-                if (listContainer && listContainer.innerHTML) {
-                    container.innerHTML = listContainer.innerHTML;
+                
+                if (data.status === 'SUCCESS' && data.transits && data.transits.length > 0) {
+                    let html = '';
+                    
+                    data.transits.forEach(transit => {
+                        const arriveeStatus = transit.arrivee ? 'arrived' : 'waiting';
+                        const arriveeLabel = transit.arrivee ? '✅ Arrivée confirmée' : '⏳ En attente d\'arrivée';
+                        const messageStatus = transit.messageArrivee ? '📤 Message envoyé' : '📭 Message non envoyé';
+                        
+                        html += `
+                            <div class="transit-item ${arriveeStatus}">
+                                <div class="item-header">
+                                    <span>🚛 ${transit.numeroDeclaration}</span>
+                                    <span class="item-status ${arriveeStatus}">${arriveeLabel}</span>
+                                </div>
+                                <div class="item-details">
+                                    <strong>Transporteur:</strong> ${transit.transport?.transporteur || 'N/A'}<br>
+                                    <strong>Départ:</strong> 🇸🇳 ${transit.paysDepart || 'SEN'} → <strong>Destination:</strong> 🇲🇱 Mali<br>
+                                    <strong>Mode:</strong> ${transit.transport?.modeTransport || 'ROUTIER'}<br>
+                                    <strong>Itinéraire:</strong> ${transit.transport?.itineraire || 'N/A'}<br>
+                                    <strong>Délai:</strong> ${transit.transport?.delaiRoute || 'N/A'}<br>
+                                    <strong>Marchandises:</strong> ${transit.marchandises?.nombre || 0} article(s)<br>
+                                    <strong>Reçu le:</strong> ${new Date(transit.dateReception).toLocaleString('fr-FR')}
+                                    ${transit.arrivee ? `<br><strong>✅ Arrivé le:</strong> ${new Date(transit.arrivee.dateArrivee).toLocaleString('fr-FR')}` : ''}
+                                    ${transit.messageArrivee ? `<br><strong>${messageStatus}:</strong> ${new Date(transit.messageArrivee.dateEnvoi).toLocaleString('fr-FR')}` : `<br>${messageStatus}`}
+                                </div>
+                                ${!transit.arrivee ? `
+                                    <button class="btn btn-mali" onclick="confirmerArriveeTransit('${transit.id}')" style="margin-top: 10px; width: 100%;">
+                                        📦 Confirmer Arrivée (ÉTAPES 13-14)
+                                    </button>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                            <strong>📊 Statistiques:</strong><br>
+                            Total: ${data.statistiques?.total || 0} | 
+                            Arrivées confirmées: ${data.statistiques?.arrivees?.confirmees || 0} | 
+                            En attente: ${data.statistiques?.arrivees?.enAttente || 0} | 
+                            Messages envoyés: ${data.statistiques?.messagesEnvoyes || 0}
+                        </div>
+                    `;
+                    
+                    container.innerHTML = html;
+                    console.log(`✅ [TRANSIT] ${data.transits.length} transit(s) chargé(s)`);
+                } else {
+                    container.innerHTML = `
+                        <p style="text-align: center; padding: 20px; color: #6c757d;">
+                            Aucune déclaration transit reçue depuis le Sénégal
+                        </p>
+                    `;
+                    console.log('ℹ️ [TRANSIT] Aucun transit trouvé');
                 }
+                
+            } catch (error) {
+                console.error('❌ [TRANSIT] Erreur chargement:', error);
+                const container = document.getElementById('transits-list');
+                container.innerHTML = `
+                    <p style="text-align: center; padding: 20px; color: #dc3545;">
+                        ❌ Erreur de chargement des transits: ${error.message}
+                    </p>
+                `;
+                afficherNotification('❌ Erreur de chargement', 'error');
             }
         }
 
+        // ============================================
+        // CHARGEMENT DES STATISTIQUES
+        // ============================================
         async function chargerStatistiques() {
             try {
-                const response = await fetch('/api/statistiques');
+                const response = await fetch(`${API_BASE}/statistiques`);
                 const data = await response.json();
                 
                 if (data.status === 'SUCCESS' && data.statistiques) {
@@ -422,15 +541,196 @@
                         data.statistiques.messagesArriveeEnvoyes || 0;
                 }
             } catch (error) {
-                console.error('Erreur chargement statistiques:', error);
+                console.error('❌ [TRANSIT] Erreur chargement statistiques:', error);
             }
         }
 
-        // Rafraîchir les données toutes les 10 secondes
-        setInterval(() => {
-            chargerTransits();
-            chargerStatistiques();
-        }, 10000);
+        // ============================================
+        // SIMULATION RÉCEPTION TRANSIT (ÉTAPE 11)
+        // ============================================
+        async function simulerReceptionTransit() {
+            const btn = document.getElementById('btn-sim-reception');
+            btn.disabled = true;
+            btn.textContent = '⏳ Simulation en cours...';
+            
+            afficherNotification('🧪 Simulation réception transit...', 'info');
+            console.log('📥 [TRANSIT] Simulation réception transit ÉTAPE 11');
+            
+            try {
+                const transitTest = {
+                    transit_original: {
+                        numero_declaration: `TRANS_TEST_${Date.now()}`,
+                        pays_depart: 'SEN',
+                        bureau_depart: '18N_DAKAR',
+                        date_creation: new Date().toISOString(),
+                        transporteur: 'TEST TRANSPORT SAHEL',
+                        itineraire: 'Dakar-Bamako via Kayes',
+                        delai_route: '72 heures'
+                    },
+                    marchandises: [{
+                        designation: 'Test Transit - Marchandises Simulation',
+                        poids: 5000,
+                        nombreColis: 100
+                    }],
+                    instructions_mali: {
+                        attendre_arrivee: true,
+                        delai_maximum: '72 heures'
+                    },
+                    metadata: {
+                        correlation_id: `TEST_TRANS_${Date.now()}`,
+                        etape_actuelle: 11,
+                        workflow_type: 'TRANSIT'
+                    }
+                };
+
+                const response = await fetch(`${API_BASE}/transit/copie`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Source-Country': 'SEN',
+                        'X-Source-System': 'KIT_TRANSIT_SENEGAL_MALI'
+                    },
+                    body: JSON.stringify(transitTest)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    afficherNotification('✅ ÉTAPE 11 terminée - Transit reçu', 'success');
+                    console.log('✅ [TRANSIT] ÉTAPE 11 terminée:', data);
+                    
+                    setTimeout(() => chargerTransits(), 1000);
+                } else {
+                    throw new Error(`Erreur ${response.status}`);
+                }
+                
+            } catch (error) {
+                console.error('❌ [TRANSIT] Erreur simulation:', error);
+                afficherNotification(`❌ Erreur: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📥 Simuler Réception Transit (Test)';
+            }
+        }
+
+        // ============================================
+        // SIMULATION ARRIVÉE TRANSIT (ÉTAPES 13-14)
+        // ============================================
+        async function simulerArriveeTransit() {
+            const btn = document.getElementById('btn-sim-arrivee');
+            btn.disabled = true;
+            btn.textContent = '⏳ Simulation en cours...';
+            
+            afficherNotification('🧪 Simulation arrivée transit...', 'info');
+            console.log('📦 [TRANSIT] Simulation arrivée ÉTAPES 13-14');
+            
+            try {
+                // D'abord créer un transit
+                await simulerReceptionTransit();
+                
+                // Attendre un peu
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // Récupérer le dernier transit
+                const responseList = await fetch(`${API_BASE}/transit/lister?limite=1`);
+                const dataList = await responseList.json();
+                
+                if (dataList.transits && dataList.transits.length > 0) {
+                    const transitId = dataList.transits[0].id;
+                    
+                    const donneesArrivee = {
+                        transitId: transitId,
+                        donneesArrivee: {
+                            controleEffectue: true,
+                            visaAppose: true,
+                            conformiteItineraire: true,
+                            delaiRespecte: true,
+                            agentReceptionnaire: 'AGENT_TEST_MALI'
+                        }
+                    };
+
+                    const response = await fetch(`${API_BASE}/transit/arrivee`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(donneesArrivee)
+                    });
+
+                    if (response.ok) {
+                        afficherNotification('✅ ÉTAPES 13-14 terminées', 'success');
+                        console.log('✅ [TRANSIT] ÉTAPES 13-14 terminées');
+                        setTimeout(() => chargerTransits(), 1000);
+                    } else {
+                        throw new Error(`Erreur ${response.status}`);
+                    }
+                }
+                
+            } catch (error) {
+                console.error('❌ [TRANSIT] Erreur simulation arrivée:', error);
+                afficherNotification(`❌ Erreur: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📦 Simuler Arrivée Transit (ÉTAPES 13-14)';
+            }
+        }
+
+        // ============================================
+        // CONFIRMER ARRIVÉE POUR UN TRANSIT EXISTANT
+        // ============================================
+        async function confirmerArriveeTransit(transitId) {
+            if (!confirm('Confirmer l\'arrivée de ce transit au Mali ?')) {
+                return;
+            }
+            
+            afficherNotification('⚙️ Confirmation arrivée en cours...', 'info');
+            console.log(`📦 [TRANSIT] Confirmation arrivée pour ${transitId}`);
+            
+            try {
+                const donneesArrivee = {
+                    transitId: transitId,
+                    donneesArrivee: {
+                        controleEffectue: true,
+                        visaAppose: true,
+                        conformiteItineraire: true,
+                        delaiRespecte: true,
+                        agentReceptionnaire: 'AGENT_MALI_TRANSIT'
+                    }
+                };
+
+                const response = await fetch(`${API_BASE}/transit/arrivee`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(donneesArrivee)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    afficherNotification('✅ ÉTAPES 13-14 terminées - Message transmis', 'success');
+                    console.log('✅ [TRANSIT] Arrivée confirmée:', data);
+                    
+                    setTimeout(() => chargerTransits(), 1000);
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Erreur confirmation');
+                }
+                
+            } catch (error) {
+                console.error('❌ [TRANSIT] Erreur confirmation:', error);
+                afficherNotification(`❌ Erreur: ${error.message}`, 'error');
+            }
+        }
+
+        // ============================================
+        // NOTIFICATION
+        // ============================================
+        function afficherNotification(message, type) {
+            const notification = document.getElementById('notification-transit');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
     </script>
 </body>
 </html>
