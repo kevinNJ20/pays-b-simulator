@@ -43,6 +43,9 @@ const apiRouter = {
   'GET /api/manifeste/reception': () => require('./api/manifeste/reception'),
   'POST /api/manifeste/reception': () => require('./api/manifeste/reception'),
   'GET /api/manifeste/lister': () => require('./api/manifeste/lister'),
+
+  // ✅ NOUVEAU: Documents GUCE
+  'GET /api/documents-guce/lister': () => require('./api/documents-guce/lister'),
   
   // ✅ ÉTAPE 8 : Création déclaration (après collecte GUCE étape 7)
   'GET /api/declaration/lister': () => require('./api/declaration/lister'),

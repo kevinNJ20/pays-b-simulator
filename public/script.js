@@ -1308,6 +1308,7 @@ async function chargerDonneesMali() {
     await Promise.all([
         chargerStatistiquesMali(),
         chargerManifestesMali(),
+        chargerDocumentsGUCE(),
         chargerDeclarationsMali(),
         chargerPaiementsMali(),
         chargerTransitsDisponibles()  // ✅ NOUVEAU
@@ -1443,6 +1444,43 @@ async function chargerPaiementsMali() {
     } catch (error) {
         console.error('Erreur chargement paiements Mali:', error);
         document.getElementById('paiements-mali-list').innerHTML = '<p>Erreur de chargement</p>';
+    }
+}
+
+async function chargerDocumentsGUCE() {
+    try {
+        const response = await fetch(`${API_BASE_MALI}/documents-guce/lister?limite=10`);
+        const data = await response.json();
+        
+        const container = document.getElementById('documents-guce-list');
+        
+        if (data.status === 'SUCCESS' && data.documents && data.documents.length > 0) {
+            container.innerHTML = data.documents.map(doc => `
+                <div class="data-item-mali processed">
+                    <div class="item-header-mali">
+                        📋 Documents GUCE - ${doc.id}
+                        <span class="item-status-mali complete">ÉTAPE 7</span>
+                    </div>
+                    <div class="item-details-mali">
+                        📦 Manifeste: ${doc.numeroManifesteOrigine || doc.manifesteId}<br>
+                        📄 Connaissement: ${doc.connaissement}<br>
+                        💼 Facture: ${doc.factureCommerciale}<br>
+                        📋 Déclaration préalable: ${doc.declarationPrealable}<br>
+                        🏢 Opérateur: ${doc.operateurEconomique}<br>
+                        👤 Déclarant: ${doc.declarantMalien}<br>
+                        🏦 Documents bancaires: ${doc.documentsBancaires?.length || 0}<br>
+                        📅 ${new Date(doc.dateCollecte).toLocaleString('fr-FR')}<br>
+                        ⏳ Prochaine étape: Création déclaration (étape 8)
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            container.innerHTML = '<p>Aucun document collecté via GUCE Mali...</p>';
+        }
+        
+    } catch (error) {
+        console.error('Erreur chargement documents GUCE:', error);
+        document.getElementById('documents-guce-list').innerHTML = '<p>Erreur de chargement</p>';
     }
 }
 
