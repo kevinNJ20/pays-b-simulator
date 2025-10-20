@@ -26,13 +26,13 @@ npm install
 # Démarrage
 npm start
 
-# Le serveur démarre sur http://localhost:3002
+# Le serveur démarre sur http://64.225.5.75:3002
 ```
 
 ### URLs principales
-- **Dashboard** : http://localhost:3002
-- **Health check** : http://localhost:3002/api/health
-- **Statistiques** : http://localhost:3002/api/statistiques
+- **Dashboard** : http://64.225.5.75:3002
+- **Health check** : http://64.225.5.75:3002/api/health
+- **Statistiques** : http://64.225.5.75:3002/api/statistiques
 
 ---
 
@@ -214,7 +214,7 @@ const KitClientMali = {
 Cliquer "Simuler Réception Manifeste (Test)"
 
 # Via API
-curl -X POST http://localhost:3002/api/manifeste/reception \
+curl -X POST http://64.225.5.75:3002/api/manifeste/reception \
   -H "Content-Type: application/json" \
   -H "X-Source-Country: SEN" \
   -H "X-Test-Mode: true" \
@@ -223,7 +223,7 @@ curl -X POST http://localhost:3002/api/manifeste/reception \
 
 ### Test workflow manuel
 ```bash
-curl -X POST http://localhost:3002/api/workflow/manuel \
+curl -X POST http://64.225.5.75:3002/api/workflow/manuel \
   -H "Content-Type: application/json" \
   -d '{
     "action": "workflow_complet_auto",
@@ -258,7 +258,7 @@ vercel --prod
 
 ### Health Check
 ```bash
-curl http://localhost:3002/api/health
+curl http://64.225.5.75:3002/api/health
 ```
 
 **Contrôles** :
