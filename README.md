@@ -193,7 +193,7 @@ GET /api/transit/lister
 ### Configuration connexion
 ```javascript
 const KitClientMali = {
-  baseURL: 'http://localhost:8080/api/v1',
+  baseURL: 'http://64.225.5.75:8086/api/v1',
   paysCode: 'MLI',
   paysRole: 'PAYS_DESTINATION'
 };
@@ -302,7 +302,7 @@ Access-Control-Allow-Headers: Content-Type, X-Source-Country,
 **Kit MuleSoft inaccessible**
 ```bash
 # Vérifier connectivité
-curl http://localhost:8080/api/v1/health
+curl http://64.225.5.75:8086/api/v1/health
 
 # Mode local sans Kit
 KIT_MULESOFT_URL="" npm start
