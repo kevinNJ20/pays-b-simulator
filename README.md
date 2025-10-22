@@ -6,14 +6,14 @@
 
 ## 📋 Description
 
-Simulateur du système douanier du **Mali (Pays B - Destination)** selon l'architecture UEMOA. Le Mali traite manuellement les déclarations douanières pour les marchandises provenant du **Sénégal (Port de Dakar)** via le **Kit d'Interconnexion MuleSoft**.
+Simulateur du système douanier du **Mali (Pays B - Destination)** dans le cadre de l'interconnexion UEMOA. Le Mali traite manuellement les déclarations douanières pour les marchandises provenant du **Sénégal (Port de Dakar)** via le **Kit d'Interconnexion MuleSoft**.
 
 ### Caractéristiques
 - **Pays** : Mali (MLI)
 - **Ville** : Bamako
-- **Rôle** : Pays de destination hinterland
-- **Mode** : Workflow MANUEL (étapes 6-16)
-- **Interconnexion** : Sénégal → Kit MuleSoft → Mali → Commission UEMOA
+- **Rôle** : Pays de destination (hinterland)
+- **Mode** : Workflow MANUEL
+- **Interconnexion** : Sénégal → Kit MuleSoft → Mali
 
 ---
 
@@ -26,39 +26,39 @@ npm install
 # Démarrage
 npm start
 
-# Le serveur démarre sur http://64.225.5.75:3002
+# Le serveur démarre sur http://localhost:3002
 ```
 
 ### URLs principales
-- **Dashboard** : http://64.225.5.75:3002
-- **Health check** : http://64.225.5.75:3002/api/health
-- **Statistiques** : http://64.225.5.75:3002/api/statistiques
+- **Dashboard** : http://localhost:3002
+- **Health check** : http://localhost:3002/api/health
+- **Statistiques** : http://localhost:3002/api/statistiques
 
 ---
 
 ## 🔥 Workflows Implémentés
 
-### 📦 Workflow Libre Pratique (Étapes Mali 6-16)
+### 📦 Workflow Libre Pratique - ÉTAPES MALI 6-16
 
-Le Mali gère manuellement les étapes suivantes :
+Le Mali gère manuellement les étapes suivantes selon le rapport PDF UEMOA :
 
 | Étape | Description | Type | Responsable |
 |-------|-------------|------|-------------|
-| **6** | Réception manifeste depuis Kit | ✅ Auto | Système |
+| **6** | Réception manifeste depuis Kit MuleSoft | ✅ Auto | Système |
 | **7** | Collecte documents GUCE Mali | 👤 Manuel | Opérateur |
-| **8** | Création déclaration | 👤 Manuel | Déclarant |
-| **9-10** | Contrôles + Calcul devis | 👤 Manuel | Agent contrôle |
-| **11** | Enregistrement déclaration | 👤 Manuel | Agent enregistrement |
-| **12-13** | Contrôles douaniers + Liquidation | 👤 Manuel | Agent contrôleur |
-| **14** | Paiement droits et taxes | 👤 Manuel | Importateur |
-| **15-16** | Transmission vers Kit | ✅ Auto | Système |
+| **8** | Création déclaration | 👤 Manuel | Déclarant malien |
+| **9-10** | Contrôles recevabilité + Calcul devis | 👤 Manuel | Agent contrôle |
+| **11** | Enregistrement déclaration détaillée | 👤 Manuel | Agent enregistrement |
+| **12-13** | Contrôles douaniers + Bulletin liquidation | 👤 Manuel | Agent contrôleur |
+| **14** | Paiement droits et taxes (BCEAO) | 👤 Manuel | Importateur |
+| **15-16** | Transmission autorisation vers Kit | ✅ Auto | Système |
 
-### 🚛 Workflow Transit (Étapes Mali 11, 13-14)
+### 🚛 Workflow Transit - ÉTAPES MALI 11, 13-14
 
 | Étape | Description | Action |
 |-------|-------------|--------|
 | **11** | Réception déclaration transit | Enregistrement |
-| **13** | Arrivée marchandises | Contrôle + Visa |
+| **13** | Arrivée marchandises au bureau Mali | Contrôle + Visa |
 | **14** | Message arrivée vers Kit | Notification Sénégal |
 
 ---
@@ -71,10 +71,13 @@ simulateur-mali/
 │   ├── health.js          # Health check
 │   ├── statistiques.js    # Métriques
 │   ├── manifeste/         # Gestion manifestes
+│   │   ├── reception.js   # ÉTAPE 6
+│   │   └── lister.js
+│   ├── workflow/          
+│   │   └── manuel.js      # ÉTAPES 7-16
 │   ├── declaration/       # Gestion déclarations
-│   ├── paiement/          # Gestion paiements
-│   ├── workflow/          # Workflow manuel
-│   └── transit/           # Gestion transit
+│   ├── paiement/          # ÉTAPE 14
+│   └── transit/           # ÉTAPES 11, 13-14
 ├── lib/
 │   ├── database.js        # Base de données Mali
 │   └── kit-client.js      # Client Kit MuleSoft
@@ -83,7 +86,7 @@ simulateur-mali/
 └── package.json
 ```
 
-**Stack technique** : Node.js 18+, Port 3002, Format UEMOA 2025.1
+**Stack** : Node.js 18+, Port 3002, Format UEMOA 2025.1
 
 ---
 
@@ -93,12 +96,13 @@ simulateur-mali/
 ```bash
 GET /api/health
 ```
-Vérifie l'état du système Mali et la connectivité Kit MuleSoft.
 
 ### 2. Réception Manifeste (ÉTAPE 6)
 ```bash
 POST /api/manifeste/reception
-Headers: X-Source-Country: SEN
+Headers: 
+  X-Source-Country: SEN
+  X-Test-Mode: true (pour tests)
 ```
 
 ### 3. Workflow Manuel (ÉTAPES 7-16)
@@ -114,9 +118,9 @@ POST /api/workflow/manuel
 - `effectuer_controles_liquidation` (Étapes 12-13)
 - `effectuer_paiement` (Étape 14)
 - `transmettre_vers_kit` (Étapes 15-16)
-- `workflow_complet_auto` (Exécution complète)
+- `workflow_complet_auto` (Toutes les étapes)
 
-**Exemple - ÉTAPE 7** :
+**Exemple ÉTAPE 7** :
 ```json
 {
   "action": "collecter_documents_guce",
@@ -140,34 +144,24 @@ GET /api/transit/lister
 
 ## 🎨 Interface Utilisateur
 
-### Fonctionnalités principales
+### Pages disponibles
+1. **Connexion** : `/login.html`
+2. **Libre Pratique** : `/libre-pratique.html`
+3. **Transit** : `/transit.html`
 
-1. **Workflow interactif**
-   - Modales pour chaque étape manuelle (7-16)
-   - Formulaires de saisie contextuels
-   - Exécution étape par étape ou workflow complet
-
-2. **Portail GUCE Mali**
-   - Accès direct : https://guce.gov.ml/portal
-   - Collecte documents (ÉTAPE 7)
-
-3. **Gestion des manifestes**
-   - Liste des manifestes reçus depuis Sénégal
-   - Sélection pour traitement manuel
-
-4. **Suivi déclarations**
-   - État des déclarations créées
-   - Liquidations et paiements
-
-### Utilisation interface
-
+### Comptes de démonstration
 ```
-1. Simuler réception manifeste (test) → ÉTAPE 6
-2. Sélectionner le manifeste dans la liste
-3. Cliquer "ÉTAPE 7 - Collecter Documents GUCE"
-4. Remplir le formulaire et valider
-5. Continuer étapes 8-16 ou exécuter workflow complet
+admin / admin123 (Tous workflows)
+douane_mali / mali2025 (Tous workflows)
+lp_mali / lp123 (Libre pratique)
+transit_mali / transit123 (Transit)
 ```
+
+### Fonctionnalités
+- Workflow interactif avec modales pour chaque étape
+- Portail GUCE Mali : https://guce.gov.ml/portal
+- Suivi des manifestes, déclarations et paiements
+- Exécution étape par étape ou workflow complet
 
 ---
 
@@ -178,11 +172,11 @@ GET /api/transit/lister
 | Statut | Étape | Description |
 |--------|-------|-------------|
 | `RECU_AU_MALI` | 6 | Manifeste reçu depuis Kit |
-| `DOCUMENTS_GUCE_COLLECTES` | 7 | Documents GUCE collectés |
+| `DOCUMENTS_GUCE_COLLECTES` | 7 | Documents collectés |
 | `DECLARATION_CREEE` | 8 | Déclaration créée |
 | `CONTROLEE_ET_DEVIS_CALCULE` | 9-10 | Contrôles + devis |
-| `ENREGISTREE_MALI` | 11 | Déclaration enregistrée |
-| `LIQUIDEE_MALI` | 12-13 | Contrôles + bulletin |
+| `ENREGISTREE_MALI` | 11 | Enregistrée |
+| `LIQUIDEE_MALI` | 12-13 | Bulletin émis |
 | `PAYEE_MALI` | 14 | Droits payés |
 | `TRANSMIS_VERS_KIT` | 15-16 | Transmis vers Kit |
 
@@ -190,7 +184,7 @@ GET /api/transit/lister
 
 ## 🔧 Kit MuleSoft Integration
 
-### Configuration connexion
+### Configuration
 ```javascript
 const KitClientMali = {
   baseURL: 'http://64.225.5.75:8086/api/v1',
@@ -214,7 +208,7 @@ const KitClientMali = {
 Cliquer "Simuler Réception Manifeste (Test)"
 
 # Via API
-curl -X POST http://64.225.5.75:3002/api/manifeste/reception \
+curl -X POST http://localhost:3002/api/manifeste/reception \
   -H "Content-Type: application/json" \
   -H "X-Source-Country: SEN" \
   -H "X-Test-Mode: true" \
@@ -223,7 +217,7 @@ curl -X POST http://64.225.5.75:3002/api/manifeste/reception \
 
 ### Test workflow manuel
 ```bash
-curl -X POST http://64.225.5.75:3002/api/workflow/manuel \
+curl -X POST http://localhost:3002/api/workflow/manuel \
   -H "Content-Type: application/json" \
   -d '{
     "action": "workflow_complet_auto",
@@ -239,17 +233,11 @@ curl -X POST http://64.225.5.75:3002/api/workflow/manuel \
 ```env
 PORT=3002
 NODE_ENV=production
-KIT_MULESOFT_URL=https://kit-mulesoft.herokuapp.com/api/v1
+KIT_MULESOFT_URL=http://64.225.5.75:8086/api/v1
 PAYS_CODE=MLI
 PAYS_NOM=Mali
 VILLE_NAME=Bamako
 PAYS_ROLE=PAYS_DESTINATION
-```
-
-### Déploiement Vercel
-```bash
-npm i -g vercel
-vercel --prod
 ```
 
 ---
@@ -258,10 +246,10 @@ vercel --prod
 
 ### Health Check
 ```bash
-curl http://64.225.5.75:3002/api/health
+curl http://localhost:3002/api/health
 ```
 
-**Contrôles** :
+**Vérifie** :
 - ✅ Service Mali actif
 - ✅ Kit MuleSoft accessible
 - ✅ Base de données opérationnelle
@@ -282,35 +270,26 @@ curl http://64.225.5.75:3002/api/health
 X-Source-Country: MLI
 X-Source-System: MALI_DOUANES_BAMAKO
 X-Correlation-ID: MLI_2025_001_123456789
-X-Workflow-Step: 6_RECEPTION_MANIFESTE
 ```
 
 ### CORS configuré
 ```http
 Access-Control-Allow-Origin: *
 Access-Control-Allow-Methods: GET, POST, OPTIONS
-Access-Control-Allow-Headers: Content-Type, X-Source-Country, 
-  X-Correlation-ID, X-Payment-Reference
+Access-Control-Allow-Headers: Content-Type, X-*
 ```
 
 ---
 
 ## 🔧 Dépannage
 
-### Problèmes courants
-
-**Kit MuleSoft inaccessible**
+### Kit MuleSoft inaccessible
 ```bash
 # Vérifier connectivité
 curl http://64.225.5.75:8086/api/v1/health
 
 # Mode local sans Kit
 KIT_MULESOFT_URL="" npm start
-```
-
-**Port Mali utilisé**
-```bash
-PORT=3003 npm start
 ```
 
 ### Mode dégradé
@@ -333,7 +312,6 @@ Le système Mali fonctionne même sans Kit MuleSoft :
 - ✅ Format UEMOA 2025.1
 - ✅ Codes pays ISO (MLI, SEN)
 - ✅ Workflow Manuel conforme rapport PDF
-- ✅ API REST pour Kit MuleSoft
 
 ---
 
@@ -343,9 +321,6 @@ Le système Mali fonctionne même sans Kit MuleSoft :
 **Conformité** : Rapport PDF UEMOA - Interconnexion SI Douaniers  
 **Version** : 1.0.0-UEMOA-MALI  
 **Runtime** : Node.js 18.x+
-
-**Contact** : Douanes Mali - Bamako  
-**Rôle** : Pays de destination hinterland - Traitement manuel
 
 ---
 
