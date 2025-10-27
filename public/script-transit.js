@@ -214,8 +214,18 @@ async function confirmerArriveeEtTransmettreTransit() {
         return;
     }
     
+    console.log('🚛 [FRONTEND] ÉTAPE 13 - Transit sélectionné:', transitId);
+    
     transitSelectionne = transitId;
-    afficherNotificationTransit('⚙️ ÉTAPE 13 : Confirmation arrivée et transmission vers MuleSoft...', 'info');
+    
+    // Désactiver le bouton pendant le traitement
+    const btn = event?.target || document.querySelector('button[onclick="confirmerArriveeEtTransmettreTransit()"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+    }
+    
+    afficherNotificationTransit('⚙️ ÉTAPE 13 : Confirmation arrivée et transmission vers Kit d\'interconnexion...', 'info');
     
     const donnees = {
         controleEffectue: true,
@@ -227,7 +237,18 @@ async function confirmerArriveeEtTransmettreTransit() {
         observationsArrivee: 'Arrivée confirmée et validée'
     };
     
-    await executerEtapeTransit('confirmer_arrivee_et_transmettre', donnees);
+    try {
+        await executerEtapeTransit('confirmer_arrivee_et_transmettre', donnees);
+    } catch (error) {
+        console.error('❌ Erreur lors de l\'étape 13:', error);
+        afficherNotificationTransit(`❌ Erreur critique: ${error.message}`, 'error');
+    } finally {
+        // Réactiver le bouton
+        if (btn) {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    }
 }
 
 // ============================================
@@ -241,6 +262,9 @@ async function executerEtapeTransit(action, donnees) {
         afficherNotificationTransit('⚠️ Aucun transit sélectionné', 'error');
         return;
     }
+    
+    console.log(`🔧 [FRONTEND] Exécution étape - Action: ${action}, Transit: ${transitId}`);
+    console.log(`🔧 [FRONTEND] Données:`, donnees);
     
     try {
         const response = await fetch(`${API_BASE_TRANSIT}/workflow/transit-manuel`, {
@@ -256,35 +280,61 @@ async function executerEtapeTransit(action, donnees) {
             })
         });
         
+        console.log(`📥 [FRONTEND] Réponse statut: ${response.status}`);
+        
         if (response.ok) {
             const data = await response.json();
+            console.log(`✅ [FRONTEND] Données reçues:`, data);
             
             afficherResultatTransit(data);
             
             // Message spécifique selon l'étape
             if (action === 'confirmer_arrivee_et_transmettre') {
                 if (data.resultat?.transmissionReussie) {
-                    afficherNotificationTransit('✅ ÉTAPE 13 terminée - Message transmis à MuleSoft', 'success');
+                    afficherNotificationTransit('✅ ÉTAPE 13 terminée - Message transmis à MuleSoft vers Sénégal', 'success');
                 } else {
-                    afficherNotificationTransit('⚠️ Arrivée confirmée mais transmission MuleSoft échouée', 'warning');
+                    const erreur = data.resultat?.erreurDetails?.message || 'Erreur inconnue';
+                    afficherNotificationTransit(`⚠️ Arrivée confirmée mais transmission MuleSoft échouée: ${erreur}`, 'warning');
                 }
             } else {
                 afficherNotificationTransit('✅ Étape terminée avec succès', 'success');
             }
             
-            // Actualiser les données
+            // Actualiser les données après un délai
             setTimeout(() => {
                 chargerTransitsDisponibles();
                 chargerStatistiquesTransit();
             }, 1000);
         } else {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Erreur étape');
+            const errorData = await response.json().catch(() => ({ message: 'Erreur serveur' }));
+            console.error('❌ [FRONTEND] Erreur réponse:', errorData);
+            throw new Error(errorData.message || `Erreur HTTP ${response.status}`);
         }
         
     } catch (error) {
-        console.error('❌ Erreur exécution étape transit:', error);
-        afficherNotificationTransit(`❌ Erreur: ${error.message}`, 'error');
+        console.error('❌ [FRONTEND] Erreur exécution étape transit:', error);
+        console.error('❌ [FRONTEND] Stack:', error.stack);
+        
+        let messageErreur = 'Erreur lors de l\'exécution: ';
+        
+        if (error.message.includes('Failed to fetch')) {
+            messageErreur += 'Impossible de contacter le serveur Mali';
+        } else if (error.message.includes('NetworkError')) {
+            messageErreur += 'Erreur réseau';
+        } else {
+            messageErreur += error.message;
+        }
+        
+        afficherNotificationTransit(`❌ ${messageErreur}`, 'error');
+        
+        // Afficher aussi dans la console pour debug
+        console.error('🔍 [DEBUG] Détails complets de l\'erreur:', {
+            action,
+            transitId,
+            donnees,
+            error: error.message,
+            stack: error.stack
+        });
     }
 }
 
@@ -359,6 +409,8 @@ function afficherResultatTransit(data) {
     const container = document.getElementById('resultat-transit');
     container.style.display = 'block';
     
+    console.log('📊 [FRONTEND] Affichage résultat:', data);
+    
     let html = '<div class="result-container">';
     
     // Header
@@ -390,22 +442,85 @@ function afficherResultatTransit(data) {
             </div>
         `;
         
-        // Prochaine étape
-        if (resultat.prochaine_etape) {
+        // Transit ID si disponible
+        if (resultat.transitId || resultat.numeroDeclaration) {
             html += `
-                <div class="result-card" style="grid-column: 1 / -1; background: #fff3cd; border-left-color: #fcd116;">
-                    <h4>➡️ Prochaine Étape</h4>
-                    <div class="result-value">${resultat.prochaine_etape}</div>
+                <div class="result-card">
+                    <h4>🆔 Transit</h4>
+                    <div class="result-value">${resultat.transitId || resultat.numeroDeclaration}</div>
                 </div>
             `;
         }
         
-        // Workflow complet ou étape 13
-        if (resultat.status === 'WORKFLOW_COMPLET' || resultat.action === 'ARRIVEE_CONFIRMEE_ET_TRANSMISE') {
+        // Statut transmission MuleSoft pour ÉTAPE 13
+        if (resultat.action === 'ARRIVEE_CONFIRMEE_ET_TRANSMISE') {
+            const transmissionOK = resultat.transmissionReussie || false;
+            const bgColor = transmissionOK ? '#d4edda' : '#f8d7da';
+            const borderColor = transmissionOK ? '#14b53a' : '#dc3545';
+            const icon = transmissionOK ? '✅' : '❌';
+            
+            html += `
+                <div class="result-card" style="grid-column: 1 / -1; background: ${bgColor}; border-left-color: ${borderColor};">
+                    <h4>${icon} Transmission vers kit d'interconnexion</h4>
+                    <div class="result-value">
+                        <strong>Statut:</strong> ${transmissionOK ? '✅ Réussie' : '❌ Échec'}<br>
+                    `;
+            
+            if (transmissionOK) {
+                html += `
+                    <strong>Destination:</strong> Kit d'interconnexion → Sénégal<br>
+                    <strong>Workflow:</strong> ${resultat.workflowTermine ? 'Terminé ✓' : 'En cours...'}<br>
+                `;
+                if (resultat.reponseKit) {
+                    html += `<strong>Réponse Kit:</strong> ${JSON.stringify(resultat.reponseKit.message || 'OK')}<br>`;
+                }
+            } else {
+                html += `
+                    <strong>Raison:</strong> ${resultat.erreurDetails?.message || 'Erreur inconnue'}<br>
+                    <strong>Code:</strong> ${resultat.erreurDetails?.code || 'N/A'}<br>
+                `;
+                if (resultat.erreurDetails?.response) {
+                    html += `<strong>Détails:</strong> ${JSON.stringify(resultat.erreurDetails.response)}<br>`;
+                }
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+            
+            // Informations d'arrivée
+            if (resultat.arrivee) {
+                html += `
+                    <div class="result-card" style="background: #e7f3ff;">
+                        <h4>📦 Arrivée Marchandises</h4>
+                        <div class="result-value" style="font-size: 0.9em;">
+                            Contrôle: ${resultat.arrivee.controleEffectue ? '✅' : '❌'}<br>
+                            Visa: ${resultat.arrivee.visaAppose ? '✅' : '❌'}<br>
+                            Itinéraire: ${resultat.arrivee.conformiteItineraire ? '✅' : '❌'}<br>
+                            Délai: ${resultat.arrivee.delaiRespecte ? '✅' : '❌'}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Prochaine étape
+        if (resultat.prochaine_etape || resultat.prochaineEtape) {
+            html += `
+                <div class="result-card" style="grid-column: 1 / -1; background: #fff3cd; border-left-color: #fcd116;">
+                    <h4>➡️ Prochaine Étape</h4>
+                    <div class="result-value">${resultat.prochaine_etape || resultat.prochaineEtape}</div>
+                </div>
+            `;
+        }
+        
+        // Workflow complet
+        if (resultat.status === 'WORKFLOW_COMPLET') {
             const transmissionOK = resultat.transmissionReussie || false;
             html += `
                 <div class="result-card" style="grid-column: 1 / -1; background: ${transmissionOK ? '#d4edda' : '#fff3cd'}; border-left-color: ${transmissionOK ? '#14b53a' : '#ffc107'};">
-                    <h4>${transmissionOK ? '🎉' : '⚠️'} ${resultat.workflowTermine ? 'Workflow Transit Terminé' : 'Étape 13 Terminée'}</h4>
+                    <h4>${transmissionOK ? '🎉' : '⚠️'} Workflow Transit Complet</h4>
                     <div class="result-value">
                         ${resultat.message || 'Opération effectuée'}<br>
                         Transmission MuleSoft: ${transmissionOK ? '✅ Réussie' : '❌ Échec'}

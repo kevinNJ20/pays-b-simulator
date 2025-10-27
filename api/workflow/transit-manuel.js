@@ -278,84 +278,193 @@ async function validerEtape12(transitId) {
     etape: 12,
     action: 'ETAPE_12_VALIDEE',
     message: 'Autorisation de passage accordée',
-    prochaine_etape: 'ÉTAPE 13: Confirmation arrivée et transmission vers MuleSoft'
+    prochaine_etape: 'ÉTAPE 13: Confirmation arrivée et transmission vers kit d\'interconnexion'
   };
 }
 
 // ✅ ÉTAPE 13 : Confirmation arrivée + Appel MuleSoft
 async function confirmerArriveeEtTransmettre(transitId, donnees = null) {
-  console.log(`📦 [MALI] ÉTAPE 13 TRANSIT: Confirmation + Transmission pour ${transitId}`);
-  
-  const transit = database.declarationsTransit.get(transitId);
-  if (!transit) {
-    throw new Error(`Transit ${transitId} non trouvé`);
-  }
-
-  // 1. Enregistrer l'arrivée
-  const arrivee = database.enregistrerArriveeMarchandises(transitId, {
-    controleEffectue: donnees?.controleEffectue !== false,
-    visaAppose: donnees?.visaAppose !== false,
-    conformiteItineraire: donnees?.conformiteItineraire !== false,
-    delaiRespecte: donnees?.delaiRespecte !== false,
-    declarationDetailDeposee: transit.declarationDetaillee ? true : false,
-    agentReceptionnaire: donnees?.agentReceptionnaire || 'AGENT_ARRIVEE_MALI',
-    observationsArrivee: donnees?.observationsArrivee || 'Arrivée confirmée'
-  });
-
-  // 2. Appel MuleSoft pour transmettre les informations
-  let transmissionReussie = false;
-  let reponseKit = null;
-  
-  try {
-    console.log(`📤 [MALI] ÉTAPE 13: Appel MuleSoft pour ${transitId}`);
+    console.log('═══════════════════════════════════════════════════════════════');
+    console.log('📦 [MALI-BACKEND] ═══ ÉTAPE 13 TRANSIT - DÉBUT ═══');
+    console.log('═══════════════════════════════════════════════════════════════');
+    console.log(`📦 [MALI-BACKEND] Transit ID: ${transitId}`);
+    console.log(`📦 [MALI-BACKEND] Données reçues:`, JSON.stringify(donnees, null, 2));
     
-    reponseKit = await kitClient.confirmerArriveeTransit(
-      transit.numeroDeclarationTransit,
-      {
+    const transit = database.declarationsTransit.get(transitId);
+    
+    if (!transit) {
+      console.error(`❌ [MALI-BACKEND] Transit ${transitId} NON TROUVÉ dans la base`);
+      console.error(`❌ [MALI-BACKEND] Transits disponibles:`, Array.from(database.declarationsTransit.keys()));
+      throw new Error(`Transit ${transitId} non trouvé`);
+    }
+  
+    console.log(`✅ [MALI-BACKEND] Transit trouvé:`, {
+      id: transit.id,
+      numeroDeclaration: transit.numeroDeclarationTransit,
+      statut: transit.statut,
+      etapeWorkflow: transit.etapeWorkflow,
+      declarationDetaillee: !!transit.declarationDetaillee,
+      visaDouanier: !!transit.visaDouanier
+    });
+  
+    // Vérifier que les étapes précédentes sont complètes
+    if (!transit.declarationDetaillee) {
+      console.warn(`⚠️ [MALI-BACKEND] Déclaration détaillée manquante pour ${transitId}`);
+    }
+    
+    if (!transit.visaDouanier) {
+      console.warn(`⚠️ [MALI-BACKEND] Visa douanier manquant pour ${transitId}`);
+    }
+  
+    // 1. Enregistrer l'arrivée
+    console.log(`📝 [MALI-BACKEND] Enregistrement de l'arrivée...`);
+    
+    const arrivee = database.enregistrerArriveeMarchandises(transitId, {
+      controleEffectue: donnees?.controleEffectue !== false,
+      visaAppose: donnees?.visaAppose !== false,
+      conformiteItineraire: donnees?.conformiteItineraire !== false,
+      delaiRespecte: donnees?.delaiRespecte !== false,
+      declarationDetailDeposee: transit.declarationDetaillee ? true : false,
+      agentReceptionnaire: donnees?.agentReceptionnaire || 'AGENT_ARRIVEE_MALI',
+      observationsArrivee: donnees?.observationsArrivee || 'Arrivée confirmée'
+    });
+  
+    console.log(`✅ [MALI-BACKEND] Arrivée enregistrée:`, arrivee.id);
+  
+    // 2. Préparer les données pour MuleSoft
+    const donneesTransmission = {
+      numeroDeclaration: transit.numeroDeclarationTransit,
+      controleEffectue: arrivee.controleEffectue,
+      visaAppose: arrivee.visaAppose,
+      conformiteItineraire: arrivee.conformiteItineraire,
+      delaiRespecte: arrivee.delaiRespecte,
+      declarationDetailDeposee: arrivee.declarationDetailDeposee,
+      agentReceptionnaire: arrivee.agentReceptionnaire,
+      observationsArrivee: arrivee.observationsArrivee,
+      
+      // Informations additionnelles
+      bureauArrivee: 'BAMAKO_DOUANES',
+      dateArrivee: arrivee.dateArrivee,
+      
+      // Visa douanier si disponible
+      visaDouanier: transit.visaDouanier ? {
+        numeroVisa: transit.visaDouanier.numeroVisa,
+        decisionVisa: transit.visaDouanier.decisionVisa,
+        dateVisa: transit.visaDouanier.dateVisa
+      } : null,
+      
+      // Déclaration détaillée si disponible
+      declarationDetaillee: transit.declarationDetaillee ? {
+        numeroDeclarationDetail: transit.declarationDetaillee.numeroDeclarationDetail,
+        dateDepot: transit.declarationDetaillee.dateDepot
+      } : null
+    };
+  
+    console.log('📤 [MALI-BACKEND] Données préparées pour MuleSoft:');
+    console.log(JSON.stringify(donneesTransmission, null, 2));
+  
+    // 3. Appel MuleSoft pour transmettre les informations
+    let transmissionReussie = false;
+    let reponseKit = null;
+    let erreurDetails = null;
+    
+    try {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📤 [MALI-BACKEND] APPEL KIT MULESOFT EN COURS...');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      
+      reponseKit = await kitClient.confirmerArriveeTransit(
+        transit.numeroDeclarationTransit,
+        donneesTransmission
+      );
+      
+      transmissionReussie = true;
+      
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('✅ [MALI-BACKEND] TRANSMISSION MULESOFT RÉUSSIE !');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📥 [MALI-BACKEND] Réponse Kit:', JSON.stringify(reponseKit, null, 2));
+      
+      // Enregistrer le message d'arrivée
+      const messageArrivee = database.envoyerMessageArrivee(transitId);
+      console.log(`✅ [MALI-BACKEND] Message arrivée enregistré: ${messageArrivee.id}`);
+      
+      // Marquer le workflow comme terminé
+      transit.workflowTransitMaliTermine = true;
+      transit.etapeWorkflow = 13;
+      transit.statut = 'TRANSMIS_VERS_SENEGAL';
+      transit.dateTransmissionKit = new Date().toISOString();
+      transit.reponseKitMuleSoft = reponseKit;
+      
+      console.log('✅ [MALI-BACKEND] Transit mis à jour:', {
+        id: transit.id,
+        statut: transit.statut,
+        etapeWorkflow: transit.etapeWorkflow,
+        workflowTermine: transit.workflowTransitMaliTermine
+      });
+      
+    } catch (error) {
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error('❌ [MALI-BACKEND] TRANSMISSION MULESOFT ÉCHOUÉE !');
+      console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.error(`❌ [MALI-BACKEND] Erreur:`, error.message);
+      console.error(`❌ [MALI-BACKEND] Stack:`, error.stack);
+      
+      erreurDetails = {
+        message: error.message,
+        code: error.code || 'UNKNOWN',
+        stack: error.stack,
+        response: error.response?.data || null
+      };
+      
+      transmissionReussie = false;
+      
+      // Marquer quand même l'arrivée mais avec statut d'erreur
+      transit.statut = 'ARRIVEE_CONFIRMEE_ERREUR_TRANSMISSION';
+      transit.erreurTransmission = erreurDetails;
+      transit.dateErreurTransmission = new Date().toISOString();
+      
+      console.error('⚠️ [MALI-BACKEND] Transit marqué avec erreur:', {
+        id: transit.id,
+        statut: transit.statut,
+        erreur: erreurDetails.message
+      });
+    }
+    
+    const resultat = {
+      etape: 13,
+      action: 'ARRIVEE_CONFIRMEE_ET_TRANSMISE',
+      transitId: transitId,
+      numeroDeclaration: transit.numeroDeclarationTransit,
+      arrivee: {
+        id: arrivee.id,
+        bureauArrivee: arrivee.bureauArrivee,
+        dateArrivee: arrivee.dateArrivee,
         controleEffectue: arrivee.controleEffectue,
         visaAppose: arrivee.visaAppose,
         conformiteItineraire: arrivee.conformiteItineraire,
-        delaiRespecte: arrivee.delaiRespecte,
-        declarationDetailDeposee: arrivee.declarationDetailDeposee,
-        agentReceptionnaire: arrivee.agentReceptionnaire,
-        observationsArrivee: arrivee.observationsArrivee,
-        
-        // Informations additionnelles
-        visaDouanier: transit.visaDouanier ? {
-          numeroVisa: transit.visaDouanier.numeroVisa,
-          decisionVisa: transit.visaDouanier.decisionVisa,
-          dateVisa: transit.visaDouanier.dateVisa
-        } : null
-      }
-    );
+        delaiRespecte: arrivee.delaiRespecte
+      },
+      transmissionReussie,
+      reponseKit,
+      erreurDetails,
+      workflowTermine: transmissionReussie,
+      message: transmissionReussie 
+        ? '✅ Workflow transit Mali terminé - Informations transmises à MuleSoft vers Sénégal'
+        : `⚠️ Arrivée confirmée mais transmission MuleSoft échouée: ${erreurDetails?.message || 'Erreur inconnue'}`,
+      prochaineEtape: transmissionReussie 
+        ? 'Sénégal : Apurement et mainlevée (ÉTAPES 17-18)'
+        : 'Réessayer la transmission vers kit d\'interconnexion'
+    };
     
-    transmissionReussie = true;
-    console.log(`✅ [MALI] ÉTAPE 13 TERMINÉE: Transmission MuleSoft réussie`);
+    console.log('═══════════════════════════════════════════════════════════════');
+    console.log('📦 [MALI-BACKEND] ═══ ÉTAPE 13 TRANSIT - FIN ═══');
+    console.log('═══════════════════════════════════════════════════════════════');
+    console.log(`📊 [MALI-BACKEND] Résultat final:`, JSON.stringify(resultat, null, 2));
+    console.log('═══════════════════════════════════════════════════════════════');
     
-    // Enregistrer le message d'arrivée
-    const messageArrivee = database.envoyerMessageArrivee(transitId);
-    
-    // Marquer le workflow comme terminé
-    transit.workflowTransitMaliTermine = true;
-    transit.etapeWorkflow = 13;
-    
-  } catch (error) {
-    console.error(`⚠️ [MALI] Erreur transmission MuleSoft:`, error.message);
-    transmissionReussie = false;
+    return resultat;
   }
-  
-  return {
-    etape: 13,
-    action: 'ARRIVEE_CONFIRMEE_ET_TRANSMISE',
-    arrivee,
-    transmissionReussie,
-    reponseKit,
-    workflowTermine: transmissionReussie,
-    message: transmissionReussie 
-      ? '✅ Workflow transit Mali terminé - Informations transmises à MuleSoft'
-      : '⚠️ Arrivée confirmée mais transmission MuleSoft échouée'
-  };
-}
 
 // ✅ Workflow transit complet automatique
 async function executerWorkflowTransitComplet(transitId) {
