@@ -23,7 +23,7 @@
         }
 
         .container {
-            max-width: 1600px;
+            max-width: 1800px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -81,6 +81,16 @@
             font-size: 1.1em;
         }
 
+        .workflow-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ce1126 0%, #14b53a 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
         .status-banner {
             padding: 15px;
             border-radius: 10px;
@@ -103,6 +113,7 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #ce1126;
         }
 
         .status-card h3 {
@@ -113,7 +124,7 @@
 
         .main {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 20px;
         }
 
@@ -143,6 +154,8 @@
             cursor: pointer;
             transition: all 0.3s;
             margin: 5px;
+            text-decoration: none;
+            display: inline-block;
         }
 
         .btn-mali {
@@ -150,19 +163,26 @@
             color: white;
         }
 
-        .btn-mali:hover {
+        .btn-transit {
+            background: linear-gradient(135deg, #fcd116 0%, #14b53a 100%);
+            color: #2c3e50;
+            font-size: 16px;
+            padding: 15px 30px;
+        }
+
+        .btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(20, 181, 58, 0.3);
         }
 
-        .btn-mali:disabled {
+        .btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
         }
 
         .workflow-mali {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 15px;
             margin: 20px 0;
         }
@@ -173,6 +193,7 @@
             border-radius: 8px;
             text-align: center;
             border-left: 4px solid #ce1126;
+            transition: all 0.3s;
         }
 
         .workflow-step.completed {
@@ -207,8 +228,19 @@
             color: #2c3e50;
         }
 
+        .step-content h4 {
+            color: #2c3e50;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .step-content p {
+            color: #6c757d;
+            font-size: 0.85em;
+        }
+
         .transit-list {
-            max-height: 500px;
+            max-height: 400px;
             overflow-y: auto;
         }
 
@@ -226,6 +258,10 @@
 
         .transit-item.arrived {
             border-left-color: #28a745;
+        }
+
+        .transit-item.complete {
+            border-left-color: #6f42c1;
         }
 
         .item-header {
@@ -265,6 +301,243 @@
             color: #155724;
         }
 
+        .item-status.complete {
+            background: #e2d9f3;
+            color: #5a3f8f;
+        }
+
+        /* Modales */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9998;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-container {
+            background: white;
+            border-radius: 15px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #ce1126 0%, #14b53a 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px 15px 0 0;
+            position: relative;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        .form-group label.required::after {
+            content: " *";
+            color: #ce1126;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #14b53a;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(20, 181, 58, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-section h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #14b53a;
+            padding-bottom: 10px;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #14b53a 0%, #0f9647 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(20, 181, 58, 0.3);
+        }
+
+        /* Résultats */
+        .result-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #14b53a;
+        }
+
+        .result-icon {
+            font-size: 48px;
+        }
+
+        .result-title h3 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .result-title p {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .result-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #14b53a;
+        }
+
+        .result-card h4 {
+            color: #2c3e50;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .result-value {
+            color: #495057;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
         .notification {
             position: fixed;
             top: 20px;
@@ -295,6 +568,10 @@
             background: linear-gradient(135deg, #007bff, #6610f2);
         }
 
+        .notification.warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+        }
+
         .copyright {
             text-align: center;
             padding: 20px;
@@ -306,7 +583,7 @@
         }
 
         @media (max-width: 768px) {
-            .main {
+            .workflow-mali {
                 grid-template-columns: 1fr;
             }
             
@@ -314,6 +591,10 @@
                 position: static;
                 transform: none;
                 margin: 10px auto;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -332,66 +613,141 @@
             
             <div class="user-info-container" id="user-info-container"></div>
             
-            <h1>🇲🇱 Système d'information Douanier Mali - Transit</h1>
-            <p>Bamako - Pays de Destination - Interconnexion UEMOA</p>
+            <h1>🇲🇱 Système d'Information Douanier Mali - Transit</h1>
+            <p>🏛️ Bamako - Pays de Destination - Workflow Manuel</p>
+            <div class="workflow-badge">ÉTAPES 8-14 : Traitement Manuel</div>
         </header>
 
         <div class="status-banner">
-            ✅ Mali opérationnel - Workflow transit étapes 11, 13-14
+            ✅ Mali opérationnel - Workflow transit étapes 8-14 (après réception ÉTAPE 11)
         </div>
 
         <div class="status-grid">
             <div class="status-card">
-                <h3>🏛️ Douanes Mali</h3>
+                <h3>🇲🇱 Service Mali</h3>
                 <div>Bamako - Actif</div>
-                <small>Mali - Pays de destination</small>
+                <small>Traitement manuel transit</small>
             </div>
 
             <div class="status-card">
                 <h3>📊 Statistiques Transit</h3>
                 <div>Reçus: <strong id="stat-recus">0</strong></div>
                 <div>Arrivées: <strong id="stat-arrivees">0</strong></div>
-                <div>Messages envoyés: <strong id="stat-messages">0</strong></div>
+                <div>Messages: <strong id="stat-messages">0</strong></div>
             </div>
 
             <div class="status-card">
                 <h3>📈 Performance</h3>
                 <div>Mode: <strong>MANUEL</strong></div>
-                <div>Étapes: <strong>11, 13-14</strong></div>
+                <div>Étapes: <strong>8-14</strong></div>
             </div>
         </div>
 
         <main class="main">
             <section class="card full-width">
-                <h2>🚛 Workflow Transit Mali (Étapes 11, 13-14)</h2>
+                <h2>🚛 Workflow Transit Mali (Étapes 8-14)</h2>
+                <p>Traitement manuel après réception transit (ÉTAPE 11)</p>
                 
                 <div class="workflow-mali">
-                    <div class="workflow-step completed">
-                        <div class="step-number completed">11</div>
-                        <h4>📥 Réception</h4>
-                        <p>Copie transit Kit</p>
+                    <div class="workflow-step manual" id="transit-step-8">
+                        <div class="step-number manual">8</div>
+                        <div class="step-content">
+                            <h4>📋 Déclaration</h4>
+                            <p>Dépôt détaillée</p>
+                        </div>
                     </div>
                     
-                    <div class="workflow-step manual">
+                    <div class="workflow-step manual" id="transit-step-9">
+                        <div class="step-number manual">9</div>
+                        <div class="step-content">
+                            <h4>🛃 Visa</h4>
+                            <p>Douanier</p>
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-step manual" id="transit-step-10">
+                        <div class="step-number manual">10</div>
+                        <div class="step-content">
+                            <h4>🔍 Vérifications</h4>
+                            <p>Finales</p>
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-step manual" id="transit-step-12">
+                        <div class="step-number manual">12</div>
+                        <div class="step-content">
+                            <h4>📦 Contrôles</h4>
+                            <p>Physiques</p>
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-step manual" id="transit-step-13">
                         <div class="step-number manual">13</div>
-                        <h4>📦 Arrivée</h4>
-                        <p>Contrôle + Visa</p>
+                        <div class="step-content">
+                            <h4>✅ Arrivée</h4>
+                            <p>Confirmation</p>
+                        </div>
                     </div>
                     
-                    <div class="workflow-step manual">
+                    <div class="workflow-step manual" id="transit-step-14">
                         <div class="step-number manual">14</div>
-                        <h4>📤 Message</h4>
-                        <p>Vers Kit</p>
+                        <div class="step-content">
+                            <h4>📤 Message</h4>
+                            <p>Vers Kit</p>
+                        </div>
                     </div>
                 </div>
+            </section>
 
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-mali" onclick="simulerReceptionTransit()" id="btn-sim-reception">
-                        📥 Simuler Réception Transit (Test)
+            <section class="card full-width">
+                <h2>🎮 Workflow Transit Interactif - Étapes Manuelles</h2>
+                <p>Exécutez chaque étape du workflow transit ou le workflow complet</p>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <label for="select-transit-mali"><strong>🚛 Sélectionner un transit :</strong></label>
+                    <select id="select-transit-mali" style="width: 100%; padding: 10px; margin-top: 10px; border-radius: 5px; border: 1px solid #ddd;">
+                        <option value="">-- Chargement des transits... --</option>
+                    </select>
+                    <button class="btn btn-mali" onclick="chargerTransitsDisponibles()" style="margin-top: 10px;">
+                        🔄 Actualiser Liste
                     </button>
-                    <button class="btn btn-mali" onclick="simulerArriveeTransit()" id="btn-sim-arrivee">
-                        📦 Simuler Arrivée Transit (ÉTAPES 13-14)
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin: 20px 0;">
+                    <button class="btn btn-transit" onclick="ouvrirModalEtape8Transit()">
+                        📋 ÉTAPE 8<br>Dépôt Déclaration
                     </button>
+                    
+                    <button class="btn btn-transit" onclick="ouvrirModalEtape9Transit()">
+                        🛃 ÉTAPE 9<br>Visa Douanier
+                    </button>
+                    
+                    <button class="btn btn-transit" onclick="ouvrirModalEtape10Transit()">
+                        🔍 ÉTAPE 10<br>Vérifications
+                    </button>
+                    
+                    <button class="btn btn-transit" onclick="ouvrirModalEtape12Transit()">
+                        📦 ÉTAPE 12<br>Contrôles Physiques
+                    </button>
+                    
+                    <button class="btn btn-mali" onclick="executerEtapeTransit('confirmer_arrivee', {})">
+                        ✅ ÉTAPE 13<br>Confirmer Arrivée
+                    </button>
+                    
+                    <button class="btn btn-mali" onclick="executerEtapeTransit('transmettre_message_arrivee', {})">
+                        📤 ÉTAPE 14<br>Transmettre Message
+                    </button>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 2px solid #ddd;">
+                    <button class="btn btn-transit" onclick="executerWorkflowTransitComplet()" id="btn-workflow-transit-complet" style="font-size: 18px; padding: 20px 40px;">
+                        🚀 Exécuter Workflow Complet<br>
+                        <small style="font-size: 12px;">(Étapes 8 à 14 en une fois)</small>
+                    </button>
+                </div>
+
+                <div id="resultat-transit" style="margin-top: 20px; display: none;">
+                    <!-- Affichage résultats -->
                 </div>
             </section>
 
@@ -402,9 +758,6 @@
                         En attente de déclarations transit depuis le Sénégal...
                     </p>
                 </div>
-                <button class="btn btn-mali" onclick="chargerTransits()" style="width: 100%; margin-top: 15px;">
-                    🔄 Actualiser
-                </button>
             </section>
         </main>
 
@@ -413,15 +766,345 @@
         </div>
     </div>
 
+    <!-- MODALES -->
+
+    <!-- Modal ÉTAPE 8 -->
+    <div id="modal-etape-8-transit" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>📋 ÉTAPE 8 - Dépôt Déclaration Détaillée Transit</h3>
+                <button class="modal-close" onclick="fermerModalTransit('modal-etape-8-transit')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-etape-8-transit">
+                    <div class="form-section">
+                        <h4>Informations Déclaration</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required">Numéro Déclaration Détaillée</label>
+                                <input type="text" name="numeroDeclarationDetail" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required">Déclarant Malien</label>
+                                <input type="text" name="declarantMalien" value="DECLARANT_TRANSIT_MALI" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="required">Importateur Destination</label>
+                            <input type="text" name="importateurDestination" value="IMPORTATEUR_MALI_TRANSIT" required>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Détails Marchandises</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Code SH</label>
+                                <input type="text" name="codeSH" value="8703210000">
+                            </div>
+                            <div class="form-group">
+                                <label>Valeur Déclarée (FCFA)</label>
+                                <input type="number" name="valeurDeclaree" value="500000">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Documents Joints</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Connaissement</label>
+                                <input type="text" name="connaissement">
+                            </div>
+                            <div class="form-group">
+                                <label>Facture Commerciale</label>
+                                <input type="text" name="factureCommerciale">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Certificat Origine</label>
+                            <input type="text" name="certificatOrigine" value="CO_SEN_TRANS">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="fermerModalTransit('modal-etape-8-transit')">Annuler</button>
+                <button class="btn-submit" onclick="soumettreEtape8Transit()">✅ Déposer Déclaration</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal ÉTAPE 9 -->
+    <div id="modal-etape-9-transit" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>🛃 ÉTAPE 9 - Apposition Visa Douanier</h3>
+                <button class="modal-close" onclick="fermerModalTransit('modal-etape-9-transit')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-etape-9-transit">
+                    <div class="form-section">
+                        <h4>Informations Visa</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required">Numéro Visa</label>
+                                <input type="text" name="numeroVisa" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required">Agent Douanier</label>
+                                <input type="text" name="agentDouanier" value="AGENT_DOUANE_TRANSIT_MALI" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Contrôles Itinéraire et Délai</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Itinéraire Vérifié</label>
+                                <select name="itineraireVerifie">
+                                    <option value="true">✅ Oui</option>
+                                    <option value="false">❌ Non</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Itinéraire Conforme</label>
+                                <select name="itineraireConforme">
+                                    <option value="true">✅ Oui</option>
+                                    <option value="false">❌ Non</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Contrôles Documents</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Documents Complets</label>
+                                <select name="documentsComplets">
+                                    <option value="true">✅ Oui</option>
+                                    <option value="false">❌ Non</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Documents Authentiques</label>
+                                <select name="documentsAuthentiques">
+                                    <option value="true">✅ Oui</option>
+                                    <option value="false">❌ Non</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Contrôles Marchandises</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Quantité Correspond</label>
+                                <select name="quantiteCorrespond">
+                                    <option value="true">✅ Oui</option>
+                                    <option value="false">❌ Non</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Scellements Intacts</label>
+                                <select name="scellementsIntacts">
+                                    <option value="true">✅ Oui</option>
+                                    <option value="false">❌ Non</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Décision Visa</h4>
+                        <div class="form-group">
+                            <label class="required">Décision</label>
+                            <select name="decisionVisa" required>
+                                <option value="ACCORDE">✅ Accordé</option>
+                                <option value="ACCORDE_AVEC_RESERVE">⚠️ Accordé avec Réserve</option>
+                                <option value="REFUSE">❌ Refusé</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Observations</label>
+                            <textarea name="observations" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="fermerModalTransit('modal-etape-9-transit')">Annuler</button>
+                <button class="btn-submit" onclick="soumettreEtape9Transit()">✅ Apposer Visa</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal ÉTAPE 10 -->
+    <div id="modal-etape-10-transit" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>🔍 ÉTAPE 10 - Vérifications Finales</h3>
+                <button class="modal-close" onclick="fermerModalTransit('modal-etape-10-transit')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-etape-10-transit">
+                    <div class="form-section">
+                        <h4>Agent Vérificateur</h4>
+                        <div class="form-group">
+                            <label class="required">Agent</label>
+                            <input type="text" name="agentVerificateur" value="AGENT_VERIFICATION_MALI" required>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Vérification Documentaire</h4>
+                        <div class="form-group">
+                            <label>Cohérence Informations</label>
+                            <select name="coherenceInfo">
+                                <option value="true">✅ Oui</option>
+                                <option value="false">❌ Non</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Vérification Réglementaire</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Droits Douaniers</label>
+                                <select name="droitsDouaniers">
+                                    <option value="EXEMPTE_TRANSIT">Exempté (Transit)</option>
+                                    <option value="APPLICABLE">Applicable</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Restrictions Levées</label>
+                                <select name="restrictionsLevees">
+                                    <option value="true">✅ Oui</option>
+                                    <option value="false">❌ Non</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Aptitude Mainlevée</h4>
+                        <div class="form-group">
+                            <label>Autorisation Procéder</label>
+                            <select name="aptMainlevee">
+                                <option value="true">✅ Oui</option>
+                                <option value="false">❌ Non</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Observations</label>
+                            <textarea name="observations" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="fermerModalTransit('modal-etape-10-transit')">Annuler</button>
+                <button class="btn-submit" onclick="soumettreEtape10Transit()">✅ Valider Vérifications</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal ÉTAPE 12 -->
+    <div id="modal-etape-12-transit" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>📦 ÉTAPE 12 - Contrôles Physiques</h3>
+                <button class="modal-close" onclick="fermerModalTransit('modal-etape-12-transit')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-etape-12-transit">
+                    <div class="form-section">
+                        <h4>Informations Contrôle</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required">Agent Contrôleur</label>
+                                <input type="text" name="agentControleur" value="AGENT_CONTROLE_PHYSIQUE_MALI" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Type Contrôle</label>
+                                <select name="typeControle">
+                                    <option value="PONCTUEL">Ponctuel</option>
+                                    <option value="APPROFONDI">Approfondi</option>
+                                    <option value="ALEATOIRE">Aléatoire</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Contrôle Colis</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nombre Colis Vérifiés</label>
+                                <input type="number" name="nombreColisVerifies" value="1" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label>État Colis</label>
+                                <select name="etatColis">
+                                    <option value="BON">Bon</option>
+                                    <option value="ENDOMMAGÉ">Endommagé</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Scellements Vérifiés</label>
+                            <select name="scellementsVerifies">
+                                <option value="true">✅ Oui</option>
+                                <option value="false">❌ Non</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Contrôle Marchandises</h4>
+                        <div class="form-group">
+                            <label>Quantité Vérifiée</label>
+                            <select name="quantiteVerifiee">
+                                <option value="true">✅ Conforme</option>
+                                <option value="false">❌ Non Conforme</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4>Résultat</h4>
+                        <div class="form-group">
+                            <label class="required">Résultat Contrôle</label>
+                            <select name="resultatControle" required>
+                                <option value="CONFORME">✅ Conforme</option>
+                                <option value="NON_CONFORME">❌ Non Conforme</option>
+                                <option value="AVEC_RESERVES">⚠️ Avec Réserves</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Observations</label>
+                            <textarea name="observations" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="fermerModalTransit('modal-etape-12-transit')">Annuler</button>
+                <button class="btn-submit" onclick="soumettreEtape12Transit()">✅ Valider Contrôles</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification -->
     <div id="notification-transit" class="notification"></div>
 
+    <!-- Scripts -->
+    <script src="/script-transit.js"></script>
     <script>
-        const API_BASE = window.location.origin + '/api';
-
-        // ============================================
-        // AUTHENTIFICATION
-        // ============================================
         window.addEventListener('DOMContentLoaded', async () => {
             console.log('🔐 [TRANSIT MALI] Vérification authentification...');
             
@@ -433,304 +1116,7 @@
             
             console.log('✅ [TRANSIT MALI] Authentification validée');
             displayUserInfo('user-info-container');
-            
-            // Charger les données initiales
-            await chargerTransits();
-            await chargerStatistiques();
-            
-            // Rafraîchir automatiquement toutes les 10 secondes
-            setInterval(async () => {
-                await chargerTransits();
-                await chargerStatistiques();
-            }, 10000);
         });
-
-        // ============================================
-        // CHARGEMENT DES TRANSITS
-        // ============================================
-        async function chargerTransits() {
-            try {
-                console.log('🔄 [TRANSIT] Chargement des transits...');
-                
-                const response = await fetch(`${API_BASE}/transit/lister?limite=20`);
-                const data = await response.json();
-                
-                const container = document.getElementById('transits-list');
-                
-                if (data.status === 'SUCCESS' && data.transits && data.transits.length > 0) {
-                    let html = '';
-                    
-                    data.transits.forEach(transit => {
-                        const arriveeStatus = transit.arrivee ? 'arrived' : 'waiting';
-                        const arriveeLabel = transit.arrivee ? '✅ Arrivée confirmée' : '⏳ En attente d\'arrivée';
-                        const messageStatus = transit.messageArrivee ? '📤 Message envoyé' : '📭 Message non envoyé';
-                        
-                        html += `
-                            <div class="transit-item ${arriveeStatus}">
-                                <div class="item-header">
-                                    <span>🚛 ${transit.numeroDeclaration}</span>
-                                    <span class="item-status ${arriveeStatus}">${arriveeLabel}</span>
-                                </div>
-                                <div class="item-details">
-                                    <strong>Transporteur:</strong> ${transit.transport?.transporteur || 'N/A'}<br>
-                                    <strong>Départ:</strong> 🇸🇳 ${transit.paysDepart || 'SEN'} → <strong>Destination:</strong> 🇲🇱 Mali<br>
-                                    <strong>Mode:</strong> ${transit.transport?.modeTransport || 'ROUTIER'}<br>
-                                    <strong>Itinéraire:</strong> ${transit.transport?.itineraire || 'N/A'}<br>
-                                    <strong>Délai:</strong> ${transit.transport?.delaiRoute || 'N/A'}<br>
-                                    <strong>Marchandises:</strong> ${transit.marchandises?.nombre || 0} article(s)<br>
-                                    <strong>Reçu le:</strong> ${new Date(transit.dateReception).toLocaleString('fr-FR')}
-                                    ${transit.arrivee ? `<br><strong>✅ Arrivé le:</strong> ${new Date(transit.arrivee.dateArrivee).toLocaleString('fr-FR')}` : ''}
-                                    ${transit.messageArrivee ? `<br><strong>${messageStatus}:</strong> ${new Date(transit.messageArrivee.dateEnvoi).toLocaleString('fr-FR')}` : `<br>${messageStatus}`}
-                                </div>
-                                ${!transit.arrivee ? `
-                                    <button class="btn btn-mali" onclick="confirmerArriveeTransit('${transit.id}')" style="margin-top: 10px; width: 100%;">
-                                        📦 Confirmer Arrivée (ÉTAPES 13-14)
-                                    </button>
-                                ` : ''}
-                            </div>
-                        `;
-                    });
-                    
-                    html += `
-                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px;">
-                            <strong>📊 Statistiques:</strong><br>
-                            Total: ${data.statistiques?.total || 0} | 
-                            Arrivées confirmées: ${data.statistiques?.arrivees?.confirmees || 0} | 
-                            En attente: ${data.statistiques?.arrivees?.enAttente || 0} | 
-                            Messages envoyés: ${data.statistiques?.messagesEnvoyes || 0}
-                        </div>
-                    `;
-                    
-                    container.innerHTML = html;
-                    console.log(`✅ [TRANSIT] ${data.transits.length} transit(s) chargé(s)`);
-                } else {
-                    container.innerHTML = `
-                        <p style="text-align: center; padding: 20px; color: #6c757d;">
-                            Aucune déclaration transit reçue depuis le Sénégal
-                        </p>
-                    `;
-                    console.log('ℹ️ [TRANSIT] Aucun transit trouvé');
-                }
-                
-            } catch (error) {
-                console.error('❌ [TRANSIT] Erreur chargement:', error);
-                const container = document.getElementById('transits-list');
-                container.innerHTML = `
-                    <p style="text-align: center; padding: 20px; color: #dc3545;">
-                        ❌ Erreur de chargement des transits: ${error.message}
-                    </p>
-                `;
-                afficherNotification('❌ Erreur de chargement', 'error');
-            }
-        }
-
-        // ============================================
-        // CHARGEMENT DES STATISTIQUES
-        // ============================================
-        async function chargerStatistiques() {
-            try {
-                const response = await fetch(`${API_BASE}/statistiques`);
-                const data = await response.json();
-                
-                if (data.status === 'SUCCESS' && data.statistiques) {
-                    document.getElementById('stat-recus').textContent = 
-                        data.statistiques.declarationsTransitRecues || 0;
-                    document.getElementById('stat-arrivees').textContent = 
-                        data.statistiques.arriveesMarchandises || 0;
-                    document.getElementById('stat-messages').textContent = 
-                        data.statistiques.messagesArriveeEnvoyes || 0;
-                }
-            } catch (error) {
-                console.error('❌ [TRANSIT] Erreur chargement statistiques:', error);
-            }
-        }
-
-        // ============================================
-        // SIMULATION RÉCEPTION TRANSIT (ÉTAPE 11)
-        // ============================================
-        async function simulerReceptionTransit() {
-            const btn = document.getElementById('btn-sim-reception');
-            btn.disabled = true;
-            btn.textContent = '⏳ Simulation en cours...';
-            
-            afficherNotification('🧪 Simulation réception transit...', 'info');
-            console.log('📥 [TRANSIT] Simulation réception transit ÉTAPE 11');
-            
-            try {
-                const transitTest = {
-                    transit_original: {
-                        numero_declaration: `TRANS_TEST_${Date.now()}`,
-                        pays_depart: 'SEN',
-                        bureau_depart: '18N_DAKAR',
-                        date_creation: new Date().toISOString(),
-                        transporteur: 'TEST TRANSPORT SAHEL',
-                        itineraire: 'Dakar-Bamako via Kayes',
-                        delai_route: '72 heures'
-                    },
-                    marchandises: [{
-                        designation: 'Test Transit - Marchandises Simulation',
-                        poids: 5000,
-                        nombreColis: 100
-                    }],
-                    instructions_mali: {
-                        attendre_arrivee: true,
-                        delai_maximum: '72 heures'
-                    },
-                    metadata: {
-                        correlation_id: `TEST_TRANS_${Date.now()}`,
-                        etape_actuelle: 11,
-                        workflow_type: 'TRANSIT'
-                    }
-                };
-
-                const response = await fetch(`${API_BASE}/transit/copie`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Source-Country': 'SEN',
-                        'X-Source-System': 'KIT_TRANSIT_SENEGAL_MALI'
-                    },
-                    body: JSON.stringify(transitTest)
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    afficherNotification('✅ ÉTAPE 11 terminée - Transit reçu', 'success');
-                    console.log('✅ [TRANSIT] ÉTAPE 11 terminée:', data);
-                    
-                    setTimeout(() => chargerTransits(), 1000);
-                } else {
-                    throw new Error(`Erreur ${response.status}`);
-                }
-                
-            } catch (error) {
-                console.error('❌ [TRANSIT] Erreur simulation:', error);
-                afficherNotification(`❌ Erreur: ${error.message}`, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '📥 Simuler Réception Transit (Test)';
-            }
-        }
-
-        // ============================================
-        // SIMULATION ARRIVÉE TRANSIT (ÉTAPES 13-14)
-        // ============================================
-        async function simulerArriveeTransit() {
-            const btn = document.getElementById('btn-sim-arrivee');
-            btn.disabled = true;
-            btn.textContent = '⏳ Simulation en cours...';
-            
-            afficherNotification('🧪 Simulation arrivée transit...', 'info');
-            console.log('📦 [TRANSIT] Simulation arrivée ÉTAPES 13-14');
-            
-            try {
-                // D'abord créer un transit
-                await simulerReceptionTransit();
-                
-                // Attendre un peu
-                await new Promise(resolve => setTimeout(resolve, 2000));
-                
-                // Récupérer le dernier transit
-                const responseList = await fetch(`${API_BASE}/transit/lister?limite=1`);
-                const dataList = await responseList.json();
-                
-                if (dataList.transits && dataList.transits.length > 0) {
-                    const transitId = dataList.transits[0].id;
-                    
-                    const donneesArrivee = {
-                        transitId: transitId,
-                        donneesArrivee: {
-                            controleEffectue: true,
-                            visaAppose: true,
-                            conformiteItineraire: true,
-                            delaiRespecte: true,
-                            agentReceptionnaire: 'AGENT_TEST_MALI'
-                        }
-                    };
-
-                    const response = await fetch(`${API_BASE}/transit/arrivee`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(donneesArrivee)
-                    });
-
-                    if (response.ok) {
-                        afficherNotification('✅ ÉTAPES 13-14 terminées', 'success');
-                        console.log('✅ [TRANSIT] ÉTAPES 13-14 terminées');
-                        setTimeout(() => chargerTransits(), 1000);
-                    } else {
-                        throw new Error(`Erreur ${response.status}`);
-                    }
-                }
-                
-            } catch (error) {
-                console.error('❌ [TRANSIT] Erreur simulation arrivée:', error);
-                afficherNotification(`❌ Erreur: ${error.message}`, 'error');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '📦 Simuler Arrivée Transit (ÉTAPES 13-14)';
-            }
-        }
-
-        // ============================================
-        // CONFIRMER ARRIVÉE POUR UN TRANSIT EXISTANT
-        // ============================================
-        async function confirmerArriveeTransit(transitId) {
-            if (!confirm('Confirmer l\'arrivée de ce transit au Mali ?')) {
-                return;
-            }
-            
-            afficherNotification('⚙️ Confirmation arrivée en cours...', 'info');
-            console.log(`📦 [TRANSIT] Confirmation arrivée pour ${transitId}`);
-            
-            try {
-                const donneesArrivee = {
-                    transitId: transitId,
-                    donneesArrivee: {
-                        controleEffectue: true,
-                        visaAppose: true,
-                        conformiteItineraire: true,
-                        delaiRespecte: true,
-                        agentReceptionnaire: 'AGENT_MALI_TRANSIT'
-                    }
-                };
-
-                const response = await fetch(`${API_BASE}/transit/arrivee`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(donneesArrivee)
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    afficherNotification('✅ ÉTAPES 13-14 terminées - Message transmis', 'success');
-                    console.log('✅ [TRANSIT] Arrivée confirmée:', data);
-                    
-                    setTimeout(() => chargerTransits(), 1000);
-                } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Erreur confirmation');
-                }
-                
-            } catch (error) {
-                console.error('❌ [TRANSIT] Erreur confirmation:', error);
-                afficherNotification(`❌ Erreur: ${error.message}`, 'error');
-            }
-        }
-
-        // ============================================
-        // NOTIFICATION
-        // ============================================
-        function afficherNotification(message, type) {
-            const notification = document.getElementById('notification-transit');
-            notification.textContent = message;
-            notification.className = `notification ${type}`;
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 5000);
-        }
     </script>
 </body>
 </html>
