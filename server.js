@@ -72,6 +72,7 @@ const apiRouter = {
   
   // ✅ NOUVEAU: Workflow manuel Mali (Étapes 7-16)
   'POST /api/workflow/manuel': () => require('./api/workflow/manuel'),
+  'POST /api/workflow/transit-manuel': () => require('./api/workflow/transit-manuel'),
 
   // ✅ WORKFLOW TRANSIT Mali (Étapes 11, 13-14)
   'POST /api/transit/copie': () => require('./api/transit/copie'),
