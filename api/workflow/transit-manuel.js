@@ -1,7 +1,6 @@
 // ============================================================================
-// MALI - API Workflow Transit Manuel - ÉTAPES 8-14
+// MALI - API Workflow Transit Manuel SIMPLIFIÉ - ÉTAPES 8-13
 // Fichier: api/workflow/transit-manuel.js
-// Permet de simuler toutes les étapes manuelles du workflow transit Mali
 // ============================================================================
 
 const database = require('../../lib/database');
@@ -35,23 +34,27 @@ module.exports = async (req, res) => {
           break;
           
         case 'effectuer_verifications':
-          resultat = await effectuerVerifications(transitId, donnees);
+          // ✅ ÉTAPE 10 SIMPLIFIÉE : Juste enregistrement
+          resultat = await effectuerVerificationsSimple(transitId);
           break;
           
-        case 'effectuer_controles_physiques':
-          resultat = await effectuerControlesPhysiques(transitId, donnees);
+        case 'etape_11_suivant':
+          // ✅ ÉTAPE 11 SIMPLIFIÉE : Juste validation
+          resultat = await validerEtape11(transitId);
           break;
           
-        case 'confirmer_arrivee':
-          resultat = await confirmerArrivee(transitId, donnees);
+        case 'etape_12_suivant':
+          // ✅ ÉTAPE 12 SIMPLIFIÉE : Juste validation
+          resultat = await validerEtape12(transitId);
           break;
           
-        case 'transmettre_message_arrivee':
-          resultat = await transmettreMessageArrivee(transitId, donnees);
+        case 'confirmer_arrivee_et_transmettre':
+          // ✅ ÉTAPE 13 : Confirmation arrivée + Appel MuleSoft
+          resultat = await confirmerArriveeEtTransmettre(transitId, donnees);
           break;
           
         case 'workflow_transit_complet':
-          // Simuler toutes les étapes automatiquement
+          // Workflow complet automatique
           resultat = await executerWorkflowTransitComplet(transitId);
           break;
           
@@ -84,8 +87,8 @@ module.exports = async (req, res) => {
   }
 };
 
-// ✅ ÉTAPE 8 : Dépôt déclaration détaillée
-async function deposerDeclarationDetaillee(transitId, donnees = {}) {
+// ✅ ÉTAPE 8 : Dépôt déclaration détaillée (INCHANGÉE)
+async function deposerDeclarationDetaillee(transitId, donnees = null) {
   console.log(`📋 [MALI] ÉTAPE 8 TRANSIT: Dépôt déclaration détaillée pour ${transitId}`);
   
   const transit = database.declarationsTransit.get(transitId);
@@ -94,34 +97,30 @@ async function deposerDeclarationDetaillee(transitId, donnees = {}) {
   }
 
   const declarationDetaillee = database.deposerDeclarationDetailTransit(transitId, {
-    numeroDeclarationDetail: donnees.numeroDeclarationDetail || `DET_${Date.now()}`,
-    declarantMalien: donnees.declarantMalien || 'DECLARANT_TRANSIT_MALI',
-    importateurDestination: donnees.importateurDestination || 'IMPORTATEUR_MALI_TRANSIT',
+    numeroDeclarationDetail: donnees?.numeroDeclarationDetail || `DET_${Date.now()}`,
+    declarantMalien: donnees?.declarantMalien || 'DECLARANT_TRANSIT_MALI',
+    importateurDestination: donnees?.importateurDestination || 'IMPORTATEUR_MALI_TRANSIT',
     
-    // Détails marchandises
-    marchandisesDetaillees: donnees.marchandisesDetaillees || transit.marchandises?.map((m, idx) => ({
+    marchandisesDetaillees: donnees?.marchandisesDetaillees || transit.marchandises?.map((m, idx) => ({
       numero: idx + 1,
       designation: m.designation || 'Marchandise transit',
-      codeSH: donnees.codeSH || '8703210000',
+      codeSH: donnees?.codeSH || '8703210000',
       origine: 'SEN',
       quantite: m.nombreColis || m.quantite || 1,
       poids: m.poids || 1000,
-      valeurDeclaree: m.valeur || donnees.valeurDeclaree || 500000
+      valeurDeclaree: m.valeur || donnees?.valeurDeclaree || 500000
     })),
     
-    // Documents joints
     documentsJoints: {
-      connaissement: donnees.connaissement || `BL_TRANS_${Date.now()}`,
-      factureCommerciale: donnees.factureCommerciale || `FC_TRANS_${Date.now()}`,
-      certificatOrigine: donnees.certificatOrigine || `CO_SEN_TRANS`,
-      declarationValeur: donnees.declarationValeur || true
+      connaissement: donnees?.connaissement || `BL_TRANS_${Date.now()}`,
+      factureCommerciale: donnees?.factureCommerciale || `FC_TRANS_${Date.now()}`,
+      certificatOrigine: donnees?.certificatOrigine || `CO_SEN_TRANS`,
+      declarationValeur: donnees?.declarationValeur || true
     },
     
-    // Informations transit
     numeroTransitOrigine: transit.numeroDeclarationTransit,
     referenceTransit: transit.id,
-    
-    agentDepot: donnees.agentDepot || 'AGENT_DECLARANT_MALI'
+    agentDepot: donnees?.agentDepot || 'AGENT_DECLARANT_MALI'
   });
   
   return {
@@ -132,8 +131,8 @@ async function deposerDeclarationDetaillee(transitId, donnees = {}) {
   };
 }
 
-// ✅ ÉTAPE 9 : Apposition visa douanier avec contrôles
-async function apposerVisaDouanier(transitId, donnees = {}) {
+// ✅ ÉTAPE 9 : Apposition visa douanier (INCHANGÉE)
+async function apposerVisaDouanier(transitId, donnees = null) {
   console.log(`🛃 [MALI] ÉTAPE 9 TRANSIT: Apposition visa douanier pour ${transitId}`);
   
   const transit = database.declarationsTransit.get(transitId);
@@ -141,7 +140,6 @@ async function apposerVisaDouanier(transitId, donnees = {}) {
     throw new Error('Déclaration détaillée requise avant visa');
   }
 
-  // Calculer si délai respecté
   const dateReception = new Date(transit.dateReception);
   const dateActuelle = new Date();
   const delaiJours = Math.floor((dateActuelle - dateReception) / (1000 * 60 * 60 * 24));
@@ -149,44 +147,40 @@ async function apposerVisaDouanier(transitId, donnees = {}) {
   const delaiRespecte = delaiJours <= delaiMaxJours;
 
   const visaDouanier = database.apposerVisaTransit(transitId, {
-    numeroVisa: donnees.numeroVisa || `VISA_MLI_${Date.now()}`,
-    agentDouanier: donnees.agentDouanier || 'AGENT_DOUANE_TRANSIT_MALI',
+    numeroVisa: donnees?.numeroVisa || `VISA_MLI_${Date.now()}`,
+    agentDouanier: donnees?.agentDouanier || 'AGENT_DOUANE_TRANSIT_MALI',
     bureauDouane: 'BAMAKO_TRANSIT',
     
-    // Contrôles effectués
     controles: {
       delaiRoute: {
         attendu: transit.delaiRoute,
         effectif: `${delaiJours} jours`,
         respecte: delaiRespecte,
-        commentaire: delaiRespecte ? 'Délai respecté' : 'Délai dépassé - Justification requise'
+        commentaire: delaiRespecte ? 'Délai respecté' : 'Délai dépassé'
       },
       itineraire: {
         prevu: transit.itineraire,
-        verifie: donnees.itineraireVerifie !== false,
-        conforme: donnees.itineraireConforme !== false,
-        commentaire: donnees.commentaireItineraire || 'Itinéraire conforme au prévu'
+        verifie: donnees?.itineraireVerifie !== false,
+        conforme: donnees?.itineraireConforme !== false,
+        commentaire: donnees?.commentaireItineraire || 'Itinéraire conforme'
       },
       documentsTransit: {
-        complets: donnees.documentsComplets !== false,
-        authentiques: donnees.documentsAuthentiques !== false,
-        commentaire: donnees.commentaireDocuments || 'Documents en ordre'
+        complets: donnees?.documentsComplets !== false,
+        authentiques: donnees?.documentsAuthentiques !== false,
+        commentaire: donnees?.commentaireDocuments || 'Documents en ordre'
       },
       marchandises: {
-        quantiteCorrespond: donnees.quantiteCorrespond !== false,
-        etatConservation: donnees.etatConservation || 'BON',
-        scellementsIntacts: donnees.scellementsIntacts !== false,
-        commentaire: donnees.commentaireMarchandises || 'Marchandises conformes'
+        quantiteCorrespond: donnees?.quantiteCorrespond !== false,
+        etatConservation: donnees?.etatConservation || 'BON',
+        scellementsIntacts: donnees?.scellementsIntacts !== false,
+        commentaire: donnees?.commentaireMarchandises || 'Marchandises conformes'
       }
     },
     
-    // Décision visa
-    decisionVisa: donnees.decisionVisa || (delaiRespecte ? 'ACCORDE' : 'ACCORDE_AVEC_RESERVE'),
-    observations: donnees.observations || '',
+    decisionVisa: donnees?.decisionVisa || (delaiRespecte ? 'ACCORDE' : 'ACCORDE_AVEC_RESERVE'),
+    observations: donnees?.observations || '',
     dateVisa: new Date().toISOString(),
-    
-    // Exigences supplémentaires si nécessaire
-    exigences: donnees.exigences || (delaiRespecte ? [] : ['Justification délai dépassé'])
+    exigences: donnees?.exigences || (delaiRespecte ? [] : ['Justification délai'])
   });
   
   return {
@@ -197,139 +191,126 @@ async function apposerVisaDouanier(transitId, donnees = {}) {
   };
 }
 
-// ✅ ÉTAPE 10 : Vérifications finales
-async function effectuerVerifications(transitId, donnees = {}) {
-  console.log(`🔍 [MALI] ÉTAPE 10 TRANSIT: Vérifications finales pour ${transitId}`);
+// ✅ ÉTAPE 10 SIMPLIFIÉE : Juste enregistrement automatique
+async function effectuerVerificationsSimple(transitId) {
+  console.log(`🔍 [MALI] ÉTAPE 10 TRANSIT SIMPLIFIÉE: Enregistrement pour ${transitId}`);
   
   const transit = database.declarationsTransit.get(transitId);
   if (!transit || !transit.visaDouanier) {
-    throw new Error('Visa douanier requis avant vérifications finales');
+    throw new Error('Visa douanier requis avant vérifications');
   }
 
+  // Enregistrement automatique simple
   const verifications = database.effectuerVerificationsFinalesTransit(transitId, {
-    agentVerificateur: donnees.agentVerificateur || 'AGENT_VERIFICATION_MALI',
+    agentVerificateur: 'AGENT_VERIFICATION_AUTO',
     
     verificationDocumentaire: {
       declarationComplete: true,
       visaAppose: true,
       documentsJoints: true,
-      coherenceInfo: donnees.coherenceInfo !== false,
+      coherenceInfo: true,
       resultat: 'CONFORME'
     },
     
     verificationReglementaire: {
-      droitsDouaniers: donnees.droitsDouaniers || 'EXEMPTE_TRANSIT',
-      taxesApplicables: donnees.taxesApplicables || 'AUCUNE',
-      restrictionsLevees: donnees.restrictionsLevees !== false,
+      droitsDouaniers: 'EXEMPTE_TRANSIT',
+      taxesApplicables: 'AUCUNE',
+      restrictionsLevees: true,
       resultat: 'CONFORME'
     },
     
     verificationFinale: {
-      aptMainlevee: donnees.aptMainlevee !== false,
+      aptMainlevee: true,
       conditionsRespectees: true,
-      autorisationProceder: donnees.autorisationProceder !== false,
+      autorisationProceder: true,
       resultat: 'VALIDE'
     },
     
     dateVerification: new Date().toISOString(),
-    observations: donnees.observations || 'Vérifications finales satisfaisantes'
+    observations: 'Vérifications automatiques - Transit validé'
   });
   
   return {
     etape: 10,
-    action: 'VERIFICATIONS_FINALES_EFFECTUEES',
+    action: 'VERIFICATIONS_AUTOMATIQUES',
     verifications,
-    prochaine_etape: 'ÉTAPE 12: Contrôles physiques (optionnel) ou ÉTAPE 13: Arrivée'
+    prochaine_etape: 'ÉTAPE 11: Validation administrative'
   };
 }
 
-// ✅ ÉTAPE 12 : Contrôles physiques (optionnel)
-async function effectuerControlesPhysiques(transitId, donnees = {}) {
-  console.log(`📦 [MALI] ÉTAPE 12 TRANSIT: Contrôles physiques pour ${transitId}`);
+// ✅ ÉTAPE 11 SIMPLIFIÉE : Simple validation
+async function validerEtape11(transitId) {
+  console.log(`✅ [MALI] ÉTAPE 11 TRANSIT SIMPLIFIÉE: Validation pour ${transitId}`);
   
   const transit = database.declarationsTransit.get(transitId);
   if (!transit) {
     throw new Error(`Transit ${transitId} non trouvé`);
   }
 
-  const controles = database.effectuerControlesPhysiquesTransit(transitId, {
-    agentControleur: donnees.agentControleur || 'AGENT_CONTROLE_PHYSIQUE_MALI',
-    typeControle: donnees.typeControle || 'PONCTUEL',
-    
-    controlesColis: {
-      nombreColisVerifies: donnees.nombreColisVerifies || transit.marchandises?.length || 1,
-      nombreColisTotal: transit.marchandises?.reduce((sum, m) => sum + (m.nombreColis || 1), 0) || 1,
-      etatColis: donnees.etatColis || 'BON',
-      scellementsVerifies: donnees.scellementsVerifies !== false
-    },
-    
-    controlesMarchandises: {
-      quantiteVerifiee: donnees.quantiteVerifiee !== false,
-      qualiteVerifiee: donnees.qualiteVerifiee !== false,
-      conformiteDescription: donnees.conformiteDescription !== false,
-      anomaliesDetectees: donnees.anomaliesDetectees || []
-    },
-    
-    resultatControle: donnees.resultatControle || 'CONFORME',
-    observations: donnees.observations || 'Contrôles physiques satisfaisants',
-    dateControle: new Date().toISOString()
-  });
+  // Marquer l'étape 11 comme validée
+  transit.etape11Validee = true;
+  transit.dateEtape11 = new Date().toISOString();
+  transit.etapeWorkflow = 11;
+  
+  return {
+    etape: 11,
+    action: 'ETAPE_11_VALIDEE',
+    message: 'Validation administrative enregistrée',
+    prochaine_etape: 'ÉTAPE 12: Autorisation de passage'
+  };
+}
+
+// ✅ ÉTAPE 12 SIMPLIFIÉE : Simple validation
+async function validerEtape12(transitId) {
+  console.log(`✅ [MALI] ÉTAPE 12 TRANSIT SIMPLIFIÉE: Validation pour ${transitId}`);
+  
+  const transit = database.declarationsTransit.get(transitId);
+  if (!transit) {
+    throw new Error(`Transit ${transitId} non trouvé`);
+  }
+
+  // Marquer l'étape 12 comme validée
+  transit.etape12Validee = true;
+  transit.dateEtape12 = new Date().toISOString();
+  transit.etapeWorkflow = 12;
   
   return {
     etape: 12,
-    action: 'CONTROLES_PHYSIQUES_EFFECTUES',
-    controles,
-    prochaine_etape: 'ÉTAPE 13: Confirmation arrivée'
+    action: 'ETAPE_12_VALIDEE',
+    message: 'Autorisation de passage accordée',
+    prochaine_etape: 'ÉTAPE 13: Confirmation arrivée et transmission vers MuleSoft'
   };
 }
 
-// ✅ ÉTAPE 13 : Confirmation arrivée
-async function confirmerArrivee(transitId, donnees = {}) {
-  console.log(`📦 [MALI] ÉTAPE 13 TRANSIT: Confirmation arrivée pour ${transitId}`);
+// ✅ ÉTAPE 13 : Confirmation arrivée + Appel MuleSoft
+async function confirmerArriveeEtTransmettre(transitId, donnees = null) {
+  console.log(`📦 [MALI] ÉTAPE 13 TRANSIT: Confirmation + Transmission pour ${transitId}`);
   
   const transit = database.declarationsTransit.get(transitId);
   if (!transit) {
     throw new Error(`Transit ${transitId} non trouvé`);
   }
 
+  // 1. Enregistrer l'arrivée
   const arrivee = database.enregistrerArriveeMarchandises(transitId, {
-    controleEffectue: donnees.controleEffectue !== false,
-    visaAppose: donnees.visaAppose !== false,
-    conformiteItineraire: donnees.conformiteItineraire !== false,
-    delaiRespecte: donnees.delaiRespecte !== false,
+    controleEffectue: donnees?.controleEffectue !== false,
+    visaAppose: donnees?.visaAppose !== false,
+    conformiteItineraire: donnees?.conformiteItineraire !== false,
+    delaiRespecte: donnees?.delaiRespecte !== false,
     declarationDetailDeposee: transit.declarationDetaillee ? true : false,
-    agentReceptionnaire: donnees.agentReceptionnaire || 'AGENT_ARRIVEE_MALI',
-    observationsArrivee: donnees.observationsArrivee || 'Arrivée confirmée'
+    agentReceptionnaire: donnees?.agentReceptionnaire || 'AGENT_ARRIVEE_MALI',
+    observationsArrivee: donnees?.observationsArrivee || 'Arrivée confirmée'
   });
-  
-  return {
-    etape: 13,
-    action: 'ARRIVEE_CONFIRMEE',
-    arrivee,
-    prochaine_etape: 'ÉTAPE 14: Transmission message vers Kit'
-  };
-}
 
-// ✅ ÉTAPE 14 : Transmission message arrivée
-async function transmettreMessageArrivee(transitId, donnees = {}) {
-  console.log(`📤 [MALI] ÉTAPE 14 TRANSIT: Transmission message arrivée pour ${transitId}`);
-  
-  const transit = database.declarationsTransit.get(transitId);
-  const arrivee = transit?.arrivee;
-  
-  if (!arrivee) {
-    throw new Error('Arrivée non confirmée');
-  }
-
-  const messageArrivee = database.envoyerMessageArrivee(transitId);
-  
-  // Tenter d'envoyer vers Kit MuleSoft
+  // 2. Appel MuleSoft pour transmettre les informations
   let transmissionReussie = false;
   let reponseKit = null;
   
   try {
+    console.log(`📤 [MALI] ÉTAPE 13: Appel MuleSoft pour ${transitId}`);
+    
     reponseKit = await kitClient.confirmerArriveeTransit(
-      messageArrivee.numeroDeclarationTransit,
+      transit.numeroDeclarationTransit,
       {
         controleEffectue: arrivee.controleEffectue,
         visaAppose: arrivee.visaAppose,
@@ -339,7 +320,7 @@ async function transmettreMessageArrivee(transitId, donnees = {}) {
         agentReceptionnaire: arrivee.agentReceptionnaire,
         observationsArrivee: arrivee.observationsArrivee,
         
-        // Infos additionnelles si disponibles
+        // Informations additionnelles
         visaDouanier: transit.visaDouanier ? {
           numeroVisa: transit.visaDouanier.numeroVisa,
           decisionVisa: transit.visaDouanier.decisionVisa,
@@ -349,22 +330,30 @@ async function transmettreMessageArrivee(transitId, donnees = {}) {
     );
     
     transmissionReussie = true;
-    console.log(`✅ [MALI] ÉTAPE 14 TERMINÉE: Message transmis vers Kit MuleSoft`);
+    console.log(`✅ [MALI] ÉTAPE 13 TERMINÉE: Transmission MuleSoft réussie`);
+    
+    // Enregistrer le message d'arrivée
+    const messageArrivee = database.envoyerMessageArrivee(transitId);
+    
+    // Marquer le workflow comme terminé
+    transit.workflowTransitMaliTermine = true;
+    transit.etapeWorkflow = 13;
     
   } catch (error) {
-    console.error(`⚠️ [MALI] Erreur transmission Kit (non bloquant):`, error.message);
+    console.error(`⚠️ [MALI] Erreur transmission MuleSoft:`, error.message);
+    transmissionReussie = false;
   }
   
   return {
-    etape: 14,
-    action: 'MESSAGE_ARRIVEE_TRANSMIS',
-    messageArrivee,
+    etape: 13,
+    action: 'ARRIVEE_CONFIRMEE_ET_TRANSMISE',
+    arrivee,
     transmissionReussie,
     reponseKit,
-    workflowTransitTermine: transmissionReussie,
-    prochaine_etape: transmissionReussie 
-      ? 'Workflow transit Mali terminé - Attente apurement Pays A'
-      : 'Réessayer transmission vers Kit'
+    workflowTermine: transmissionReussie,
+    message: transmissionReussie 
+      ? '✅ Workflow transit Mali terminé - Informations transmises à MuleSoft'
+      : '⚠️ Arrivée confirmée mais transmission MuleSoft échouée'
   };
 }
 
@@ -388,28 +377,28 @@ async function executerWorkflowTransitComplet(transitId) {
     resultats.etapes.push(etape9);
     await attendre(500);
     
-    // ÉTAPE 10
-    const etape10 = await effectuerVerifications(transitId);
+    // ÉTAPE 10 (simplifiée)
+    const etape10 = await effectuerVerificationsSimple(transitId);
     resultats.etapes.push(etape10);
     await attendre(500);
     
-    // ÉTAPE 12 (optionnel mais on le fait)
-    const etape12 = await effectuerControlesPhysiques(transitId);
+    // ÉTAPE 11 (simplifiée)
+    const etape11 = await validerEtape11(transitId);
+    resultats.etapes.push(etape11);
+    await attendre(500);
+    
+    // ÉTAPE 12 (simplifiée)
+    const etape12 = await validerEtape12(transitId);
     resultats.etapes.push(etape12);
     await attendre(500);
     
-    // ÉTAPE 13
-    const etape13 = await confirmerArrivee(transitId);
+    // ÉTAPE 13 (arrivée + MuleSoft)
+    const etape13 = await confirmerArriveeEtTransmettre(transitId);
     resultats.etapes.push(etape13);
-    await attendre(500);
-    
-    // ÉTAPE 14
-    const etape14 = await transmettreMessageArrivee(transitId);
-    resultats.etapes.push(etape14);
     
     resultats.status = 'WORKFLOW_COMPLET';
-    resultats.message = '✅ Toutes les étapes transit Mali (8-14) ont été exécutées avec succès';
-    resultats.transmissionReussie = etape14.transmissionReussie;
+    resultats.message = '✅ Toutes les étapes transit Mali (8-13) ont été exécutées';
+    resultats.transmissionReussie = etape13.transmissionReussie;
     
   } catch (error) {
     resultats.status = 'ERREUR';
