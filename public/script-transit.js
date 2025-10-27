@@ -1,7 +1,7 @@
 // ============================================================================
-// MALI - Script Frontend Transit COMPLET
+// MALI - Script Frontend Transit CORRIGÉ - Version Simplifiée
 // Fichier: public/script-transit.js
-// Gestion complète du workflow transit avec modales interactives
+// Étapes 8-13 avec simplifications des étapes 10, 11, 12
 // ============================================================================
 
 const API_BASE_TRANSIT = window.location.origin + '/api';
@@ -153,10 +153,10 @@ async function soumettreEtape9Transit() {
 }
 
 // ============================================
-// ÉTAPE 10 : VÉRIFICATIONS FINALES
+// ÉTAPES 10, 11, 12 : SIMPLIFIÉES - JUSTE VALIDATION
 // ============================================
 
-function ouvrirModalEtape10Transit() {
+async function validerEtape10Transit() {
     const selectTransit = document.getElementById('select-transit-mali');
     const transitId = selectTransit.value;
     
@@ -166,37 +166,12 @@ function ouvrirModalEtape10Transit() {
     }
     
     transitSelectionne = transitId;
-    ouvrirModalTransit('modal-etape-10-transit');
+    afficherNotificationTransit('⚙️ Validation ÉTAPE 10...', 'info');
+    
+    await executerEtapeTransit('effectuer_verifications', {});
 }
 
-async function soumettreEtape10Transit() {
-    const form = document.getElementById('form-etape-10-transit');
-    
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
-    
-    const donnees = {
-        agentVerificateur: form.agentVerificateur.value,
-        coherenceInfo: form.coherenceInfo.value === 'true',
-        droitsDouaniers: form.droitsDouaniers.value,
-        restrictionsLevees: form.restrictionsLevees.value === 'true',
-        aptMainlevee: form.aptMainlevee.value === 'true',
-        observations: form.observations.value
-    };
-    
-    fermerModalTransit('modal-etape-10-transit');
-    afficherNotificationTransit('⚙️ Vérifications finales...', 'info');
-    
-    await executerEtapeTransit('effectuer_verifications', donnees);
-}
-
-// ============================================
-// ÉTAPE 12 : CONTRÔLES PHYSIQUES
-// ============================================
-
-function ouvrirModalEtape12Transit() {
+async function validerEtape11Transit() {
     const selectTransit = document.getElementById('select-transit-mali');
     const transitId = selectTransit.value;
     
@@ -206,32 +181,53 @@ function ouvrirModalEtape12Transit() {
     }
     
     transitSelectionne = transitId;
-    ouvrirModalTransit('modal-etape-12-transit');
+    afficherNotificationTransit('⚙️ Validation ÉTAPE 11...', 'info');
+    
+    await executerEtapeTransit('etape_11_suivant', {});
 }
 
-async function soumettreEtape12Transit() {
-    const form = document.getElementById('form-etape-12-transit');
+async function validerEtape12Transit() {
+    const selectTransit = document.getElementById('select-transit-mali');
+    const transitId = selectTransit.value;
     
-    if (!form.checkValidity()) {
-        form.reportValidity();
+    if (!transitId) {
+        afficherNotificationTransit('⚠️ Veuillez d\'abord sélectionner un transit', 'warning');
         return;
     }
     
+    transitSelectionne = transitId;
+    afficherNotificationTransit('⚙️ Validation ÉTAPE 12...', 'info');
+    
+    await executerEtapeTransit('etape_12_suivant', {});
+}
+
+// ============================================
+// ÉTAPE 13 : CONFIRMATION ARRIVÉE + APPEL MULESOFT
+// ============================================
+
+async function confirmerArriveeEtTransmettreTransit() {
+    const selectTransit = document.getElementById('select-transit-mali');
+    const transitId = selectTransit.value;
+    
+    if (!transitId) {
+        afficherNotificationTransit('⚠️ Veuillez d\'abord sélectionner un transit', 'warning');
+        return;
+    }
+    
+    transitSelectionne = transitId;
+    afficherNotificationTransit('⚙️ ÉTAPE 13 : Confirmation arrivée et transmission vers MuleSoft...', 'info');
+    
     const donnees = {
-        agentControleur: form.agentControleur.value,
-        typeControle: form.typeControle.value,
-        nombreColisVerifies: parseInt(form.nombreColisVerifies.value),
-        etatColis: form.etatColis.value,
-        scellementsVerifies: form.scellementsVerifies.value === 'true',
-        quantiteVerifiee: form.quantiteVerifiee.value === 'true',
-        resultatControle: form.resultatControle.value,
-        observations: form.observations.value
+        controleEffectue: true,
+        visaAppose: true,
+        conformiteItineraire: true,
+        delaiRespecte: true,
+        declarationDetailDeposee: true,
+        agentReceptionnaire: 'AGENT_ARRIVEE_MALI',
+        observationsArrivee: 'Arrivée confirmée et validée'
     };
     
-    fermerModalTransit('modal-etape-12-transit');
-    afficherNotificationTransit('⚙️ Contrôles physiques...', 'info');
-    
-    await executerEtapeTransit('effectuer_controles_physiques', donnees);
+    await executerEtapeTransit('confirmer_arrivee_et_transmettre', donnees);
 }
 
 // ============================================
@@ -264,7 +260,17 @@ async function executerEtapeTransit(action, donnees) {
             const data = await response.json();
             
             afficherResultatTransit(data);
-            afficherNotificationTransit('✅ Étape terminée avec succès', 'success');
+            
+            // Message spécifique selon l'étape
+            if (action === 'confirmer_arrivee_et_transmettre') {
+                if (data.resultat?.transmissionReussie) {
+                    afficherNotificationTransit('✅ ÉTAPE 13 terminée - Message transmis à MuleSoft', 'success');
+                } else {
+                    afficherNotificationTransit('⚠️ Arrivée confirmée mais transmission MuleSoft échouée', 'warning');
+                }
+            } else {
+                afficherNotificationTransit('✅ Étape terminée avec succès', 'success');
+            }
             
             // Actualiser les données
             setTimeout(() => {
@@ -299,7 +305,7 @@ async function executerWorkflowTransitComplet() {
     btnWorkflow.disabled = true;
     btnWorkflow.innerHTML = '⏳ Workflow en cours...<br><small>Veuillez patienter</small>';
     
-    afficherNotificationTransit('🚀 Démarrage workflow transit complet (étapes 8-14)...', 'info');
+    afficherNotificationTransit('🚀 Démarrage workflow transit complet (étapes 8-13)...', 'info');
     
     try {
         const response = await fetch(`${API_BASE_TRANSIT}/workflow/transit-manuel`, {
@@ -319,7 +325,11 @@ async function executerWorkflowTransitComplet() {
             afficherResultatTransit(data);
             
             if (data.resultat?.status === 'WORKFLOW_COMPLET') {
-                afficherNotificationTransit('🎉 Workflow transit complet terminé!', 'success');
+                if (data.resultat?.transmissionReussie) {
+                    afficherNotificationTransit('🎉 Workflow transit complet terminé avec succès!', 'success');
+                } else {
+                    afficherNotificationTransit('⚠️ Workflow terminé mais transmission MuleSoft échouée', 'warning');
+                }
             } else {
                 afficherNotificationTransit('⚠️ Workflow terminé avec erreurs', 'warning');
             }
@@ -337,7 +347,7 @@ async function executerWorkflowTransitComplet() {
         afficherNotificationTransit(`❌ Erreur: ${error.message}`, 'error');
     } finally {
         btnWorkflow.disabled = false;
-        btnWorkflow.innerHTML = '🚀 Exécuter Workflow Complet<br><small>(Étapes 8 à 14 en une fois)</small>';
+        btnWorkflow.innerHTML = '🚀 Exécuter Workflow Complet<br><small>(Étapes 8 à 13 en une fois)</small>';
     }
 }
 
@@ -372,7 +382,7 @@ function afficherResultatTransit(data) {
         html += `
             <div class="result-card">
                 <h4>📋 Étape</h4>
-                <div class="result-value">${resultat.etape || 'N/A'}</div>
+                <div class="result-value">${resultat.etape || resultat.etapes || 'N/A'}</div>
             </div>
             <div class="result-card">
                 <h4>✅ Action</h4>
@@ -390,14 +400,15 @@ function afficherResultatTransit(data) {
             `;
         }
         
-        // Workflow complet
-        if (resultat.status === 'WORKFLOW_COMPLET') {
+        // Workflow complet ou étape 13
+        if (resultat.status === 'WORKFLOW_COMPLET' || resultat.action === 'ARRIVEE_CONFIRMEE_ET_TRANSMISE') {
+            const transmissionOK = resultat.transmissionReussie || false;
             html += `
-                <div class="result-card" style="grid-column: 1 / -1; background: #d4edda; border-left-color: #14b53a;">
-                    <h4>🎉 Workflow Transit Terminé</h4>
+                <div class="result-card" style="grid-column: 1 / -1; background: ${transmissionOK ? '#d4edda' : '#fff3cd'}; border-left-color: ${transmissionOK ? '#14b53a' : '#ffc107'};">
+                    <h4>${transmissionOK ? '🎉' : '⚠️'} ${resultat.workflowTermine ? 'Workflow Transit Terminé' : 'Étape 13 Terminée'}</h4>
                     <div class="result-value">
-                        ${resultat.message}<br>
-                        Transmission vers Kit: ${resultat.transmissionReussie ? '✅ Réussie' : '⚠️ Échec'}
+                        ${resultat.message || 'Opération effectuée'}<br>
+                        Transmission MuleSoft: ${transmissionOK ? '✅ Réussie' : '❌ Échec'}
                     </div>
                 </div>
             `;

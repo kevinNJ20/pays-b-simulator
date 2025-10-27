@@ -170,6 +170,13 @@
             padding: 15px 30px;
         }
 
+        .btn-simple {
+            background: #6c757d;
+            color: white;
+            font-size: 14px;
+            padding: 10px 20px;
+        }
+
         .btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(20, 181, 58, 0.3);
@@ -182,7 +189,7 @@
 
         .workflow-mali {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
             gap: 15px;
             margin: 20px 0;
         }
@@ -217,6 +224,7 @@
             justify-content: center;
             margin: 0 auto 10px;
             font-weight: bold;
+            font-size: 0.85em;
         }
 
         .step-number.completed {
@@ -230,13 +238,13 @@
 
         .step-content h4 {
             color: #2c3e50;
-            font-size: 0.9em;
+            font-size: 0.85em;
             margin-bottom: 5px;
         }
 
         .step-content p {
             color: #6c757d;
-            font-size: 0.85em;
+            font-size: 0.75em;
         }
 
         .transit-list {
@@ -615,11 +623,11 @@
             
             <h1>🇲🇱 Système d'Information Douanier Mali - Transit</h1>
             <p>🏛️ Bamako - Pays de Destination - Workflow Manuel</p>
-            <div class="workflow-badge">ÉTAPES 8-14 : Traitement Manuel</div>
+            <div class="workflow-badge">ÉTAPES 8-13 : Traitement Manuel</div>
         </header>
 
         <div class="status-banner">
-            ✅ Mali opérationnel - Workflow transit étapes 8-14 (après réception ÉTAPE 11)
+            ✅ Mali opérationnel - Workflow transit étapes 8-13 simplifié
         </div>
 
         <div class="status-grid">
@@ -639,68 +647,75 @@
             <div class="status-card">
                 <h3>📈 Performance</h3>
                 <div>Mode: <strong>MANUEL</strong></div>
-                <div>Étapes: <strong>8-14</strong></div>
+                <div>Étapes: <strong>8-13</strong></div>
             </div>
         </div>
 
         <main class="main">
             <section class="card full-width">
-                <h2>🚛 Workflow Transit Mali (Étapes 8-14)</h2>
-                <p>Traitement manuel après réception transit (ÉTAPE 11)</p>
+                <h2>🚛 Workflow Transit Mali (Étapes 8-13)</h2>
+                <p><strong>Étape 11</strong> déjà reçue - Traitement manuel des étapes suivantes</p>
                 
                 <div class="workflow-mali">
                     <div class="workflow-step manual" id="transit-step-8">
                         <div class="step-number manual">8</div>
                         <div class="step-content">
-                            <h4>📋 Déclaration</h4>
-                            <p>Dépôt détaillée</p>
+                            <h4>📋</h4>
+                            <p>Déclaration</p>
                         </div>
                     </div>
                     
                     <div class="workflow-step manual" id="transit-step-9">
                         <div class="step-number manual">9</div>
                         <div class="step-content">
-                            <h4>🛃 Visa</h4>
-                            <p>Douanier</p>
+                            <h4>🛃</h4>
+                            <p>Visa</p>
                         </div>
                     </div>
                     
                     <div class="workflow-step manual" id="transit-step-10">
                         <div class="step-number manual">10</div>
                         <div class="step-content">
-                            <h4>🔍 Vérifications</h4>
-                            <p>Finales</p>
+                            <h4>🔍</h4>
+                            <p>Vérif.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="workflow-step manual" id="transit-step-11">
+                        <div class="step-number manual">11</div>
+                        <div class="step-content">
+                            <h4>✓</h4>
+                            <p>Valid.</p>
                         </div>
                     </div>
                     
                     <div class="workflow-step manual" id="transit-step-12">
                         <div class="step-number manual">12</div>
                         <div class="step-content">
-                            <h4>📦 Contrôles</h4>
-                            <p>Physiques</p>
+                            <h4>✓</h4>
+                            <p>Autoris.</p>
                         </div>
                     </div>
                     
                     <div class="workflow-step manual" id="transit-step-13">
                         <div class="step-number manual">13</div>
                         <div class="step-content">
-                            <h4>✅ Arrivée</h4>
-                            <p>Confirmation</p>
+                            <h4>📤</h4>
+                            <p>Transmis.</p>
                         </div>
                     </div>
-                    
-                    <div class="workflow-step manual" id="transit-step-14">
-                        <div class="step-number manual">14</div>
-                        <div class="step-content">
-                            <h4>📤 Message</h4>
-                            <p>Vers Kit</p>
-                        </div>
-                    </div>
+                </div>
+
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <strong>ℹ️ Workflow simplifié :</strong><br>
+                    • Étapes 8-9 : Formulaires complets<br>
+                    • Étapes 10-12 : Validation simple (bouton "Suivant")<br>
+                    • Étape 13 : Confirmation arrivée + Appel MuleSoft vers Sénégal
                 </div>
             </section>
 
             <section class="card full-width">
-                <h2>🎮 Workflow Transit Interactif - Étapes Manuelles</h2>
+                <h2>🎮 Workflow Transit Interactif</h2>
                 <p>Exécutez chaque étape du workflow transit ou le workflow complet</p>
                 
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
@@ -713,7 +728,7 @@
                     </button>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin: 20px 0;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px; margin: 20px 0;">
                     <button class="btn btn-transit" onclick="ouvrirModalEtape8Transit()">
                         📋 ÉTAPE 8<br>Dépôt Déclaration
                     </button>
@@ -722,27 +737,27 @@
                         🛃 ÉTAPE 9<br>Visa Douanier
                     </button>
                     
-                    <button class="btn btn-transit" onclick="ouvrirModalEtape10Transit()">
-                        🔍 ÉTAPE 10<br>Vérifications
+                    <button class="btn btn-simple" onclick="validerEtape10Transit()">
+                        ✓ ÉTAPE 10<br>Suivant
                     </button>
                     
-                    <button class="btn btn-transit" onclick="ouvrirModalEtape12Transit()">
-                        📦 ÉTAPE 12<br>Contrôles Physiques
+                    <button class="btn btn-simple" onclick="validerEtape11Transit()">
+                        ✓ ÉTAPE 11<br>Suivant
                     </button>
                     
-                    <button class="btn btn-mali" onclick="executerEtapeTransit('confirmer_arrivee', {})">
-                        ✅ ÉTAPE 13<br>Confirmer Arrivée
+                    <button class="btn btn-simple" onclick="validerEtape12Transit()">
+                        ✓ ÉTAPE 12<br>Suivant
                     </button>
                     
-                    <button class="btn btn-mali" onclick="executerEtapeTransit('transmettre_message_arrivee', {})">
-                        📤 ÉTAPE 14<br>Transmettre Message
+                    <button class="btn btn-mali" onclick="confirmerArriveeEtTransmettreTransit()">
+                        📤 ÉTAPE 13<br>Confirmer + MuleSoft
                     </button>
                 </div>
 
                 <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 2px solid #ddd;">
                     <button class="btn btn-transit" onclick="executerWorkflowTransitComplet()" id="btn-workflow-transit-complet" style="font-size: 18px; padding: 20px 40px;">
                         🚀 Exécuter Workflow Complet<br>
-                        <small style="font-size: 12px;">(Étapes 8 à 14 en une fois)</small>
+                        <small style="font-size: 12px;">(Étapes 8 à 13 en une fois)</small>
                     </button>
                 </div>
 
@@ -766,7 +781,7 @@
         </div>
     </div>
 
-    <!-- MODALES -->
+    <!-- MODALES (seulement pour étapes 8 et 9) -->
 
     <!-- Modal ÉTAPE 8 -->
     <div id="modal-etape-8-transit" class="modal-overlay">
@@ -938,163 +953,6 @@
             <div class="modal-footer">
                 <button class="btn-cancel" onclick="fermerModalTransit('modal-etape-9-transit')">Annuler</button>
                 <button class="btn-submit" onclick="soumettreEtape9Transit()">✅ Apposer Visa</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal ÉTAPE 10 -->
-    <div id="modal-etape-10-transit" class="modal-overlay">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3>🔍 ÉTAPE 10 - Vérifications Finales</h3>
-                <button class="modal-close" onclick="fermerModalTransit('modal-etape-10-transit')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="form-etape-10-transit">
-                    <div class="form-section">
-                        <h4>Agent Vérificateur</h4>
-                        <div class="form-group">
-                            <label class="required">Agent</label>
-                            <input type="text" name="agentVerificateur" value="AGENT_VERIFICATION_MALI" required>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h4>Vérification Documentaire</h4>
-                        <div class="form-group">
-                            <label>Cohérence Informations</label>
-                            <select name="coherenceInfo">
-                                <option value="true">✅ Oui</option>
-                                <option value="false">❌ Non</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h4>Vérification Réglementaire</h4>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Droits Douaniers</label>
-                                <select name="droitsDouaniers">
-                                    <option value="EXEMPTE_TRANSIT">Exempté (Transit)</option>
-                                    <option value="APPLICABLE">Applicable</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Restrictions Levées</label>
-                                <select name="restrictionsLevees">
-                                    <option value="true">✅ Oui</option>
-                                    <option value="false">❌ Non</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h4>Aptitude Mainlevée</h4>
-                        <div class="form-group">
-                            <label>Autorisation Procéder</label>
-                            <select name="aptMainlevee">
-                                <option value="true">✅ Oui</option>
-                                <option value="false">❌ Non</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Observations</label>
-                            <textarea name="observations" rows="3"></textarea>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-cancel" onclick="fermerModalTransit('modal-etape-10-transit')">Annuler</button>
-                <button class="btn-submit" onclick="soumettreEtape10Transit()">✅ Valider Vérifications</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal ÉTAPE 12 -->
-    <div id="modal-etape-12-transit" class="modal-overlay">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3>📦 ÉTAPE 12 - Contrôles Physiques</h3>
-                <button class="modal-close" onclick="fermerModalTransit('modal-etape-12-transit')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="form-etape-12-transit">
-                    <div class="form-section">
-                        <h4>Informations Contrôle</h4>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="required">Agent Contrôleur</label>
-                                <input type="text" name="agentControleur" value="AGENT_CONTROLE_PHYSIQUE_MALI" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Type Contrôle</label>
-                                <select name="typeControle">
-                                    <option value="PONCTUEL">Ponctuel</option>
-                                    <option value="APPROFONDI">Approfondi</option>
-                                    <option value="ALEATOIRE">Aléatoire</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h4>Contrôle Colis</h4>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Nombre Colis Vérifiés</label>
-                                <input type="number" name="nombreColisVerifies" value="1" min="1">
-                            </div>
-                            <div class="form-group">
-                                <label>État Colis</label>
-                                <select name="etatColis">
-                                    <option value="BON">Bon</option>
-                                    <option value="ENDOMMAGÉ">Endommagé</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>Scellements Vérifiés</label>
-                            <select name="scellementsVerifies">
-                                <option value="true">✅ Oui</option>
-                                <option value="false">❌ Non</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h4>Contrôle Marchandises</h4>
-                        <div class="form-group">
-                            <label>Quantité Vérifiée</label>
-                            <select name="quantiteVerifiee">
-                                <option value="true">✅ Conforme</option>
-                                <option value="false">❌ Non Conforme</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h4>Résultat</h4>
-                        <div class="form-group">
-                            <label class="required">Résultat Contrôle</label>
-                            <select name="resultatControle" required>
-                                <option value="CONFORME">✅ Conforme</option>
-                                <option value="NON_CONFORME">❌ Non Conforme</option>
-                                <option value="AVEC_RESERVES">⚠️ Avec Réserves</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Observations</label>
-                            <textarea name="observations" rows="3"></textarea>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-cancel" onclick="fermerModalTransit('modal-etape-12-transit')">Annuler</button>
-                <button class="btn-submit" onclick="soumettreEtape12Transit()">✅ Valider Contrôles</button>
             </div>
         </div>
     </div>
